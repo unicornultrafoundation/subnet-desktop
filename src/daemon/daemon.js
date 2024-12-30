@@ -1,0 +1,155 @@
+const { exec, execFile } = require('child_process');
+const os = require('os');
+const fs = require('fs');
+const path = require('path');
+const util = require('util');
+
+const execAsync = util.promisify(exec);
+const execFileAsync = util.promisify(execFile);
+
+let subnetNodeProcess;
+
+async function startContainerd() {
+  console.log('Starting containerd...');
+  const platform = os.platform();
+  let startCommand;
+
+  if (platform === 'linux') {
+    startCommand = 'sudo systemctl start containerd';
+  } else if (platform === 'darwin') {
+    startCommand = 'limactl shell default sudo systemctl start containerd';
+  } else if (platform === 'win32') {
+    startCommand = 'powershell.exe -Command "Start-Service containerd"';
+  } else {
+    console.error(`Unsupported platform: ${platform}`);
+    return;
+  }
+
+  try {
+    const { stdout, stderr } = await execAsync(startCommand);
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+    console.log('containerd started successfully.');
+  } catch (error) {
+    console.error(`Error starting containerd: ${error}`);
+  }
+}
+
+async function stopContainerd() {
+  console.log('Stopping containerd...');
+  const platform = os.platform();
+  let stopCommand;
+
+  if (platform === 'linux') {
+    stopCommand = 'sudo systemctl stop containerd';
+  } else if (platform === 'darwin') {
+    stopCommand = 'limactl shell default sudo systemctl stop containerd';
+  } else if (platform === 'win32') {
+    stopCommand = 'powershell.exe -Command "Stop-Service containerd"';
+  } else {
+    console.error(`Unsupported platform: ${platform}`);
+    return;
+  }
+
+  try {
+    const { stdout, stderr } = await execAsync(stopCommand);
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+    console.log('containerd stopped successfully.');
+  } catch (error) {
+    console.error(`Error stopping containerd: ${error}`);
+  }
+}
+
+async function startSubnetNode() {
+  console.log('Starting subnet node...');
+  const binaryPath = path.join(__dirname, 'subnet-node-binary');
+  const platform = os.platform();
+
+  if (!fs.existsSync(binaryPath)) {
+    console.error('Subnet node binary not found.');
+    return;
+  }
+
+  let startCommand;
+
+  if (platform === 'linux' || platform === 'darwin') {
+    startCommand = binaryPath;
+  } else if (platform === 'win32') {
+    startCommand = `wsl ${binaryPath}`;
+  } else {
+    console.error(`Unsupported platform: ${platform}`);
+    return;
+  }
+
+  try {
+    subnetNodeProcess = await execFileAsync(startCommand);
+    console.log('Subnet node started successfully.');
+  } catch (error) {
+    console.error(`Error starting subnet node: ${error}`);
+  }
+}
+
+function stopSubnetNode() {
+  console.log('Stopping subnet node...');
+  if (subnetNodeProcess) {
+    subnetNodeProcess.kill();
+    console.log('Subnet node stopped successfully.');
+  } else {
+    console.error('Subnet node process not found.');
+  }
+}
+
+async function createDaemon(app) {
+  app.whenReady().then(async () => {
+    // Start containerd and then start subnet node
+    await startContainerd();
+    await startSubnetNode();
+
+    app.on('activate', function () {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+
+  // Quit when all windows are closed, except on macOS. There, it's common
+  // for applications and their menu bar to stay active until the user quits
+  // explicitly with Cmd + Q.
+  app.on('window-all-closed', async function () {
+    if (process.platform !== 'darwin') {
+      stopSubnetNode();
+      await stopContainerd();
+      app.quit();
+    } else {
+      stopSubnetNode();
+      await stopContainerd();
+      stopLima();
+      app.quit();
+    }
+  });
+
+  // Handle app restart
+  app.on('restart', async function () {
+    await restartAll();
+  });
+
+  // Handle app start
+  app.on('start', async function () {
+    await startContainerd();
+    await startSubnetNode();
+  });
+
+  // Handle app stop
+  app.on('stop', async function () {
+    stopSubnetNode();
+    await stopContainerd();
+    if (os.platform() === 'darwin') {
+      stopLima();
+    }
+  });
+}
+
+module.exports = {
+  createDaemon
+};
