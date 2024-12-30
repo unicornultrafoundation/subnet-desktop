@@ -3,11 +3,83 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
+const https = require('https');
 
 const execAsync = util.promisify(exec);
 const execFileAsync = util.promisify(execFile);
 
 let subnetNodeProcess;
+
+async function isInstalled(command) {
+  try {
+    await execAsync(command);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function downloadFile(url, dest) {
+  const file = fs.createWriteStream(dest);
+  return new Promise((resolve, reject) => {
+    https.get(url, (response) => {
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(resolve);
+      });
+    }).on('error', (err) => {
+      fs.unlink(dest);
+      reject(err.message);
+    });
+  });
+}
+
+async function installContainerd() {
+  console.log('Installing containerd...');
+  const platform = os.platform();
+  let installCommand;
+
+  if (platform === 'linux') {
+    const version = '1.7.13';
+    const arch = os.arch() === 'x64' ? 'amd64' : 'arm64';
+    const url = `https://github.com/containerd/containerd/releases/download/v${version}/containerd-${version}-linux-${arch}.tar.gz`;
+    const dest = path.join('/tmp', `containerd-${version}-linux-${arch}.tar.gz`);
+
+    await downloadFile(url, dest);
+    installCommand = `sudo tar Cxzvf /usr/local ${dest}`;
+  } else if (platform === 'darwin') {
+    installCommand = 'brew install lima && limactl start';
+  } else if (platform === 'win32') {
+    installCommand = `
+      powershell.exe -Command "
+      Stop-Service containerd;
+      $Version='1.7.13';
+      $Arch='amd64';
+      curl.exe -LO https://github.com/containerd/containerd/releases/download/v$Version/containerd-$Version-windows-$Arch.tar.gz;
+      tar.exe xvf .\\containerd-$Version-windows-$Arch.tar.gz;
+      Copy-Item -Path .\\bin -Destination $Env:ProgramFiles\\containerd -Recurse -Force;
+      $Path = [Environment]::GetEnvironmentVariable('PATH', 'Machine') + [IO.Path]::PathSeparator + '$Env:ProgramFiles\\containerd';
+      [Environment]::SetEnvironmentVariable('Path', $Path, 'Machine');
+      $Env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User');
+      containerd.exe config default | Out-File $Env:ProgramFiles\\containerd\\config.toml -Encoding ascii;
+      containerd.exe --register-service;
+      Start-Service containerd;
+      "
+    `;
+  } else {
+    console.error(`Unsupported platform: ${platform}`);
+    return;
+  }
+
+  try {
+    const { stdout, stderr } = await execAsync(installCommand);
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+    console.log('containerd installed successfully.');
+  } catch (error) {
+    console.error(`Error installing containerd: ${error}`);
+  }
+}
 
 async function startContainerd() {
   console.log('Starting containerd...');
@@ -102,6 +174,11 @@ function stopSubnetNode() {
 
 async function createDaemon(app) {
   app.whenReady().then(async () => {
+    // Install containerd if not installed
+    if (!await isInstalled('containerd --version')) {
+      await installContainerd();
+    }
+
     // Start containerd and then start subnet node
     await startContainerd();
     await startSubnetNode();
