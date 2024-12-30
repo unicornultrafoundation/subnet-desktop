@@ -14,7 +14,7 @@ function installContainerd() {
   if (platform === 'linux') {
     installCommand = 'sudo apt-get update && sudo apt-get install -y containerd';
   } else if (platform === 'darwin') {
-    installCommand = 'brew install containerd';
+    installCommand = 'brew install lima && limactl start';
   } else if (platform === 'win32') {
     installCommand = 'wsl --install -d Ubuntu && wsl sudo apt-get update && wsl sudo apt-get install -y containerd';
   } else {
@@ -42,8 +42,10 @@ function startContainerd() {
   const platform = os.platform();
   let startCommand;
 
-  if (platform === 'linux' || platform === 'darwin') {
+  if (platform === 'linux') {
     startCommand = 'sudo systemctl start containerd';
+  } else if (platform === 'darwin') {
+    startCommand = 'limactl shell default sudo systemctl start containerd';
   } else if (platform === 'win32') {
     startCommand = 'wsl sudo systemctl start containerd';
   } else {
@@ -65,8 +67,10 @@ function installSubnetNode() {
   const platform = os.platform();
   let installCommand;
 
-  if (platform === 'linux' || platform === 'darwin') {
+  if (platform === 'linux') {
     installCommand = 'sudo apt-get update && sudo apt-get install -y subnet-node';
+  } else if (platform === 'darwin') {
+    installCommand = 'limactl shell default sudo apt-get update && limactl shell default sudo apt-get install -y subnet-node';
   } else if (platform === 'win32') {
     installCommand = 'wsl sudo apt-get update && wsl sudo apt-get install -y subnet-node';
   } else {
@@ -94,8 +98,10 @@ function startSubnetNode() {
   const platform = os.platform();
   let startCommand;
 
-  if (platform === 'linux' || platform === 'darwin') {
+  if (platform === 'linux') {
     startCommand = 'sudo systemctl start subnet-node';
+  } else if (platform === 'darwin') {
+    startCommand = 'limactl shell default sudo systemctl start subnet-node';
   } else if (platform === 'win32') {
     startCommand = 'wsl sudo systemctl start subnet-node';
   } else {
