@@ -1,3 +1,9 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electron', {
+  onInstallProgress: (callback) => ipcRenderer.on('install-progress', callback)
+});
+
 /**
  * The preload script runs before `index.html` is loaded
  * in the renderer. It has access to web APIs as well as

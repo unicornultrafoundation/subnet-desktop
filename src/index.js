@@ -1,15 +1,20 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('node:path')
 const { createDaemon } = require('./daemon/daemon')
 
+let mainWindow;
+
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      enableRemoteModule: false,
+      nodeIntegration: false
     }
   })
 
@@ -30,7 +35,7 @@ async function run () {
 
   try {
     await Promise.all([
-      createDaemon(app),
+      createDaemon(app, mainWindow),
       createWindow(),
     ]);
   } catch (error) {
