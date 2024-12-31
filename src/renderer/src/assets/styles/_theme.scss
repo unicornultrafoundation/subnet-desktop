@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  body {
+    font-family: "Inter Tight", system-ui, sans-serif;
+    background: #191b1e;
+    color: #fff;
+  }
+}
+
+@layer components {
+  .root-layout {
+    @apply bg-base color-base no-scroll-bar flex min-h-screen w-full flex-col items-center;
+  }
+
+  .page-layout {
+    @apply flex h-screen w-full max-w-[360px] flex-col items-center px-4 pb-6 pt-[36px] desktop:w-full;
+  }
+
+  .text-gradient {
+    /* Background text */
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@layer utilities {
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+.base-modal {
+  z-index: 49;
+}
+
+.app-loading {
+  @apply fixed bottom-0 left-0 right-0 top-0 z-[60] h-screen w-screen;
+
+  .background {
+    @apply pointer-events-none absolute flex h-full w-full select-none items-center justify-center;
+    @apply bg-black/70 backdrop-blur-md;
+
+    .content {
+      @apply text-center text-white;
+    }
+  }
+}
+
+.network-switcher {
+  z-index: 40;
+}
+
+.app-settings {
+  z-index: 40;
+}
+
+.no-scroll-bar {
+  &::-webkit-scrollbar {
+    @apply hidden;
+  }
+}

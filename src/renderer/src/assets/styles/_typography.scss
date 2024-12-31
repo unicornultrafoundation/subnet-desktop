@@ -1,0 +1,104 @@
+@tailwind components;
+
+@layer components {
+  h1 {
+    @apply text-[48px] font-semibold leading-[56px] tracking-[-1px];
+  }
+
+  h2 {
+    @apply text-[40px] font-semibold leading-[48px] tracking-[-1px];
+  }
+
+  h3 {
+    @apply text-[32px] font-semibold leading-[40px] tracking-[-0.5px];
+  }
+
+  h4 {
+    @apply text-[24px] font-semibold leading-[32px] tracking-[-0.5px];
+  }
+
+  h5 {
+    @apply text-[20px] font-semibold leading-[32px] tracking-[-0.5px];
+  }
+
+  h6 {
+    @apply text-[18px] font-semibold leading-[28px] tracking-[-0.5px];
+  }
+
+  // .text-display {
+  //   @apply font-semibold text-[40px] leading-5  tracking-[-1px] uppercase;
+  // }
+
+  // .text-headline-1 {
+  //   @apply font-semibold text-2xl leading-snug tracking-normal uppercase;
+  // }
+
+  // .text-headline-2 {
+  //   @apply font-semibold text-base leading-[19px] tracking-normal uppercase;
+  // }
+
+  .title-lg {
+    @apply text-[16px] font-semibold leading-[24px] tracking-normal;
+  }
+
+  .title-sm {
+    @apply text-[14px] font-semibold leading-[24px] tracking-normal;
+  }
+
+  .body-lg {
+    @apply text-[16px] leading-[24px] tracking-normal;
+  }
+
+  .body-md {
+    @apply text-[14px] leading-[24px] tracking-normal;
+  }
+
+  .body-sm {
+    @apply text-[12px] leading-[20px] tracking-normal;
+  }
+
+  .caption {
+    @apply text-[12px] font-semibold uppercase leading-[16px] tracking-normal;
+  }
+
+  .text-medium {
+    @apply text-[14px] font-medium leading-[20px] tracking-[-0.5px];
+  }
+
+  // .text-small {
+  //   @apply font-medium text-[12px] leading-5 tracking-normal;
+  // }
+
+  // .text-xsmall {
+  //   @apply font-semibold text-[10px] leading-[18px] tracking-normal;
+  // }
+
+  // .text-btn-lg {
+  //   @apply font-semibold text-medium leading-6 tracking-normal uppercase;
+  // }
+
+  // .text-btn-md {
+  //   @apply font-semibold text-sm leading-[16px] tracking-normal uppercase;
+  // }
+
+  // .shadow-sm {
+  //   box-shadow: 0 2px 0 0 #2c3034;
+  // }
+
+  // .shadow-md {
+  //   box-shadow: 0 4px 0 0 #2c3034;
+  // }
+
+  // .shadow-lg {
+  //   box-shadow: 0 8px 0 0 #2c3034;
+  //   @apply font-semibold text-medium leading-6 tracking-normal;
+  // }
+
+  // .text-shadow-lg {
+  //   text-shadow: 0 8px 0 #2c3034;
+  // }
+
+  // .text-shadow-md {
+  //   text-shadow: 0 6px 0 #2c3034;
+  // }
+}
