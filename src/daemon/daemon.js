@@ -1,18 +1,22 @@
-const execa = require('execa');
+const { exec, execFile } = require('child_process');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const util = require('util');
 const https = require('https');
-const { ipcMain } = require('electron');
+const { ipcMain, BrowserWindow } = require('electron');
+
+const execAsync = util.promisify(exec);
+const execFileAsync = util.promisify(execFile);
 
 let subnetNodeProcess;
 
 async function isInstalled(command) {
   try {
     if (os.platform() === 'win32') {
-      await execa.command(`powershell.exe -Command "${command}"`);
+      await execAsync(`powershell.exe -Command "${command}"`);
     } else {
-      await execa.command(command);
+      await execAsync(command);
     }
     return true;
   } catch {
@@ -46,7 +50,7 @@ async function enableWSL() {
 
   for (const command of commands) {
     try {
-      const { stdout, stderr } = await execa.command(command);
+      const { stdout, stderr } = await execAsync(command);
       console.log(`stdout: ${stdout}`);
       console.error(`stderr: ${stderr}`);
     } catch (error) {
@@ -86,7 +90,7 @@ async function installContainerd(mainWindow) {
   }
 
   try {
-    const { stdout, stderr } = await execa.command(installCommand);
+    const { stdout, stderr } = await execAsync(installCommand);
     console.log(`stdout: ${stdout}`);
     console.error(`stderr: ${stderr}`);
     mainWindow.webContents.send('install-progress', 'containerd installed successfully.');
@@ -136,7 +140,7 @@ async function installCNIPlugins(mainWindow) {
   }
 
   try {
-    const { stdout, stderr } = await execa.command(installCommand);
+    const { stdout, stderr } = await execAsync(installCommand);
     console.log(`stdout: ${stdout}`);
     console.error(`stderr: ${stderr}`);
     mainWindow.webContents.send('install-progress', 'CNI plugins installed successfully.');
@@ -163,7 +167,7 @@ async function startContainerd() {
   }
 
   try {
-    const { stdout, stderr } = await execa.command(startCommand);
+    const { stdout, stderr } = await execAsync(startCommand);
     console.log(`stdout: ${stdout}`);
     console.error(`stderr: ${stderr}`);
     console.log('containerd started successfully.');
@@ -189,7 +193,7 @@ async function stopContainerd() {
   }
 
   try {
-    const { stdout, stderr } = await execa.command(stopCommand);
+    const { stdout, stderr } = await execAsync(stopCommand);
     console.log(`stdout: ${stdout}`);
     console.error(`stderr: ${stderr}`);
     console.log('containerd stopped successfully.');
@@ -220,7 +224,7 @@ async function startSubnetNode() {
   }
 
   try {
-    subnetNodeProcess = await execa.command(startCommand);
+    subnetNodeProcess = await execFileAsync(startCommand);
     console.log('Subnet node started successfully.');
   } catch (error) {
     console.error(`Error starting subnet node: ${error}`);
