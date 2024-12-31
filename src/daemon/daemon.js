@@ -1,9 +1,10 @@
-const { exec, execFile } = require('child_process');
+const { exec, execFile, spawn } = require('child_process');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const https = require('https');
+const http = require('http');
 const { ipcMain, BrowserWindow } = require('electron');
 
 const execAsync = util.promisify(exec);
@@ -14,7 +15,7 @@ let subnetNodeProcess;
 async function isInstalled(command) {
   try {
     if (os.platform() === 'win32') {
-      await execAsync(`powershell.exe -Command "${command}"`);
+      await execAsync(`wsl -d Ubuntu-24.04 -- ${command}`);
     } else {
       await execAsync(command);
     }
@@ -202,9 +203,46 @@ async function stopContainerd() {
   }
 }
 
+async function checkSubnetNodeStatus(retries = 5) {
+  for (let i = 0; i < retries; i++) {
+    const isRunning = await new Promise((resolve) => {
+      http.get('http://localhost:8080/status', (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            const status = JSON.parse(data);
+            if (status.online) {
+              resolve(true);
+            } else {
+              resolve(false);
+            }
+          } catch (error) {
+            resolve(false);
+          }
+        });
+      }).on('error', (err) => {
+        resolve(false);
+      });
+    });
+
+    if (isRunning) {
+      return true;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+
+  return false;
+}
+
 async function startSubnetNode() {
   console.log('Starting subnet node...');
-  const binaryPath = path.join(__dirname, '../assets/bin/subnet-node-binary');
+  const binaryPath = path.join(__dirname, '../../assets/bin/subnet');
   const platform = os.platform();
 
   if (!fs.existsSync(binaryPath)) {
@@ -224,8 +262,20 @@ async function startSubnetNode() {
   }
 
   try {
-    subnetNodeProcess = await execFileAsync(startCommand);
+    subnetNodeProcess = spawn(startCommand, [], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    subnetNodeProcess.unref();
     console.log('Subnet node started successfully.');
+
+    // Check if the subnet node is running
+    const isRunning = await checkSubnetNodeStatus();
+    if (isRunning) {
+      console.log('Subnet node is running.');
+    } else {
+      console.error('Subnet node failed to start.');
+    }
   } catch (error) {
     console.error(`Error starting subnet node: ${error}`);
   }
@@ -250,7 +300,7 @@ async function createDaemon(app, mainWindow) {
 
     // Install CNI plugins if not installed
     if (os.platform() === 'win32') {
-      if (!await isInstalled('wsl -d Ubuntu-24.04 -- test -d /opt/cni/bin')) {
+      if (!await isInstalled('test -d /opt/cni/bin')) {
         await installCNIPlugins(mainWindow);
       }
     } else {

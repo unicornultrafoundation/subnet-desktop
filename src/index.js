@@ -5,6 +5,8 @@ const { createDaemon } = require('./daemon/daemon')
 
 let mainWindow;
 
+app.disableHardwareAcceleration();
+
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
