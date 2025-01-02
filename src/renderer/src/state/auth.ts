@@ -2,22 +2,30 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface AuthState {
-  token: string;
-  setToken: (token: string) => void;
-  nodeURL: string;
-  setNodeURL: (nodeURL: string) => void;
+  username: string;
+  setUsername: (username: string) => void;
+  password: string;
+  setPassword: (password: string) => void;
+  port: string;
+  setPort: (port: string) => void;
+  alreadySetup: boolean;
+  setAlreadySetup: (alreadySetup: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: "",
-      setToken: (token: string) => set({ token }),
-      nodeURL: "",
-      setNodeURL: (nodeURL: string) => set({ nodeURL }),
+      username: "",
+      setUsername: (username: string) => set({ username }),
+      password: "",
+      setPassword: (password: string) => set({ password }),
+      port: "",
+      setPort: (port: string) => set({ port }),
+      alreadySetup: false,
+      setAlreadySetup: (alreadySetup: boolean) => set({ alreadySetup }),
     }),
     {
-      name: "auth-storage",
+      name: "config-storage",
     },
   ),
 );
