@@ -5,12 +5,18 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/daemon/**/*",
+    "src/utils/**/*",
+    "scripts/**/*"
+    
   ],
   "compilerOptions": {
     "composite": true,
-    "module": "CommonJS",
+    "baseUrl": "./",
     "types": [
       "electron-vite/node"
-    ]
+    ],
+    "paths": {
+      "@utils/*": ["src/utils/*"]
+    }
   }
 }
