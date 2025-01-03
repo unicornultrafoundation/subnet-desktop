@@ -5,14 +5,14 @@ import path from 'path';
 import util from 'util';
 import https from 'https';
 import http from 'http';
-import { ipcMain, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 
 const execAsync = util.promisify(exec);
 const execFileAsync = util.promisify(execFile);
 
 let subnetNodeProcess;
 
-async function isInstalled(command) {
+export async function isInstalled(command) {
   try {
     if (os.platform() === 'win32') {
       await execAsync(`wsl -d Ubuntu-24.04 -- ${command}`);
@@ -60,7 +60,7 @@ async function enableWSL() {
   }
 }
 
-async function installContainerd(mainWindow) {
+export async function installContainerd(mainWindow: BrowserWindow) {
   mainWindow.webContents.send('install-progress', 'Installing containerd...');
   const platform = os.platform();
   let installCommand;
@@ -101,7 +101,7 @@ async function installContainerd(mainWindow) {
   }
 }
 
-async function installCNIPlugins(mainWindow) {
+export async function installCNIPlugins(mainWindow) {
   mainWindow.webContents.send('install-progress', 'Installing CNI plugins...');
   const platform = os.platform();
   let installCommand;
@@ -151,7 +151,7 @@ async function installCNIPlugins(mainWindow) {
   }
 }
 
-async function startContainerd() {
+export async function startContainerd() {
   console.log('Starting containerd...');
   const platform = os.platform();
   let startCommand;
@@ -177,7 +177,7 @@ async function startContainerd() {
   }
 }
 
-async function stopContainerd() {
+export async function stopContainerd() {
   console.log('Stopping containerd...');
   const platform = os.platform();
   let stopCommand;
@@ -240,7 +240,7 @@ async function checkSubnetNodeStatus(retries = 5) {
   return false;
 }
 
-async function startSubnetNode() {
+export async function startSubnetNode() {
   console.log('Starting subnet node...');
   const binaryPath = path.join(__dirname, '../../assets/bin/subnet');
   const platform = os.platform();
@@ -281,7 +281,7 @@ async function startSubnetNode() {
   }
 }
 
-function stopSubnetNode() {
+export function stopSubnetNode() {
   console.log('Stopping subnet node...');
   if (subnetNodeProcess) {
     subnetNodeProcess.kill();
@@ -291,7 +291,7 @@ function stopSubnetNode() {
   }
 }
 
-async function createDaemon(app, mainWindow) {
+export default async function createDaemon(app, mainWindow: BrowserWindow) {
   app.whenReady().then(async () => {
     // Install containerd if not installed
     if (!await isInstalled('containerd --version')) {
@@ -356,7 +356,3 @@ async function createDaemon(app, mainWindow) {
     }
   });
 }
-
-export default {
-  createDaemon
-};
