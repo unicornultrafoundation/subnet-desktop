@@ -15,7 +15,6 @@ export type DownloadContext = {
   versions: DependencyVersions;
   dependencyPlatform: DependencyPlatform;
   platform: Platform;
-  goPlatform: GoPlatform;
   // whether we are running on M1
   isM1: boolean;
   // resourcesDir is the directory that external dependencies and the like go into
