@@ -3,3 +3,7 @@ dist
 out
 .DS_Store
 *.log*
+/resources/darwin/
+/resources/host/
+/resources/linux/*
+/resources/win32/
