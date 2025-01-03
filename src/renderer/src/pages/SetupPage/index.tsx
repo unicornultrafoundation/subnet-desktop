@@ -1,7 +1,7 @@
 import Footer from "@renderer/components/Footer";
 import APP_LOGO from "@/assets/images/app_logo.png"
 import SetupSteps from "./SetupSteps";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import StepContent from "./StepContent";
 import LogoU2U from '@/assets/images/logo-u2u.png';
 import ISuccess from '@/assets/images/i-success.png';
@@ -9,6 +9,7 @@ import IFailed from '@/assets/images/i-failed.png';
 import Button from "@renderer/components/Button";
 import SetupNode from "./SetupNode";
 import Installation from "./Installation";
+import { useAuthStore } from "@renderer/state/auth";
 
 export type SetupStep = {
   title: string;
@@ -24,10 +25,11 @@ const initialSteps: SetupStep[] = [
 ]
 
 export default function SetupPage() {
+  const { setAlreadySetup } = useAuthStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps,] = useState<SetupStep[]>(initialSteps);
-  const [progress,] = useState(100);
-  const [isInstallSuccess,] = useState(false);
+  const [progress, setProgress] = useState(100);
+  const [isInstallSuccess, setInstallSuccess] = useState(true);
   const [nodeDetails, setNodeDetails] = useState({
     port: 0,
     username: '',
@@ -82,7 +84,7 @@ export default function SetupPage() {
             <div className="w-3/4 text-center text-balance font-normal text-[16px] text-[#B4B4B4] pt-4">
               Congratulations! You’ve successfully installed Node Desktop Application by U2U Network
             </div>
-            <Button type="primary" className="!px-16 !py-3 mt-8" onClick={() => setCurrentStepIndex(1)}>
+            <Button type="primary" className="!px-16 !py-3 mt-8" onClick={() => setAlreadySetup(true)}>
               <span className="font-semibold text-[14px]">FINISH</span>
             </Button>
           </div>
