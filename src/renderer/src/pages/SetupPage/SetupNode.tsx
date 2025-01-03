@@ -1,7 +1,7 @@
-import Location from '@/assets/images/location.png'
-import Profile from '@/assets/images/profile.png'
-import Password from '@/assets/images/password.png'
-import Show from '@/assets/images/show.png'
+import IcoLocation from '@/assets/images/svg/icon-location.svg'
+import IcoProfile from '@/assets/images/svg/icon-profile.svg'
+import IcoPassword from '@/assets/images/svg/icon-password.svg'
+import IcoShow from '@/assets/images/svg/icon-show.svg'
 import { useMemo, useState } from 'react'
 import Button from '@renderer/components/Button'
 
@@ -38,7 +38,7 @@ const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDe
             Port
           </div>
           <div className="w-full rounded-[8px] bg-[#272727] p-3 flex flex-row gap-2">
-            <img src={Location} width={24} height={24} />
+            <img src={IcoLocation} width={24} height={24} />
             <input
               className="flex-1 bg-transparent !outline-none !border-none !py-0 !px-0 font-medium text-[16px]"
               placeholder="Enter your port"
@@ -52,7 +52,7 @@ const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDe
             Username
           </div>
           <div className="w-full rounded-[8px] bg-[#272727] p-3 flex flex-row gap-2">
-            <img src={Profile} width={24} height={24} />
+            <img src={IcoProfile} width={24} height={24} />
             <input
               className="flex-1 bg-transparent outline-none font-medium text-[16px]"
               placeholder="Enter your username"
@@ -65,7 +65,7 @@ const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDe
             Password
           </div>
           <div className="w-full rounded-[8px] bg-[#272727] p-3 flex flex-row gap-2 justify-between items-center">
-            <img src={Password} className='w-6 h-6' />
+            <img src={IcoPassword} className='w-6 h-6' />
             <input
               className="flex-1 !py-0 !px-0 bg-transparent !outline-none !border-none font-medium text-[16px]"
               placeholder="Enter your password"
@@ -75,7 +75,7 @@ const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDe
             <button
               onClick={() => setIsShowPassword(!isShowPassword)}
               className="!p-0 !m-0 !border-none !outline-none !bg-transparent">
-              <img src={Show} width={24} height={24} />
+              <img src={IcoShow} width={24} height={24} />
             </button>
           </div>
         </div>

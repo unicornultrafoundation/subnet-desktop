@@ -1,7 +1,7 @@
 import Footer from "@renderer/components/Footer";
 import APP_LOGO from "@/assets/images/app_logo.png"
 import SetupSteps from "./SetupSteps";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import StepContent from "./StepContent";
 import LogoU2U from '@/assets/images/logo-u2u.png';
 import ISuccess from '@/assets/images/i-success.png';
@@ -26,9 +26,8 @@ const initialSteps: SetupStep[] = [
 export default function SetupPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps,] = useState<SetupStep[]>(initialSteps);
-  const [progress, setProgress] = useState(100);
+  const [progress,] = useState(100);
   const [isInstallSuccess,] = useState(false);
-  const interval = useRef<any>(null);
   const [nodeDetails, setNodeDetails] = useState({
     port: 0,
     username: '',
