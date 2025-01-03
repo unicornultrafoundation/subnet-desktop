@@ -40,6 +40,7 @@ export type DependencyVersions = {
   alpineLimaISO: AlpineLimaISOVersion;
   WSLDistro: string;
   socketVMNet: string;
+  wix: string;
 };
 
 /**

@@ -6,6 +6,11 @@ import {
   DependencyPlatform, DependencyVersions, readDependencyVersions, DownloadContext, Dependency,
 } from './lib/dependencies';
 import { simpleSpawn } from './simple_process';
+import { AlpineLimaISO, Lima, SocketVMNet } from './dependencies/lima';
+import { WSLDistro } from './dependencies/wsl';
+import { Wix } from './dependencies/wix';
+import { WSLDistroImage } from './dependencies/tar-archives';
+import { SudoPrompt } from './dependencies/sudo-prompt';
 
 type DependencyWithContext = {
   dependency: Dependency;
@@ -24,14 +29,21 @@ const userTouchedDependencies: Dependency[] = [
 
 // Dependencies that are specific to unix hosts.
 const unixDependencies: Dependency[] = [
+  new Lima(),
+  new AlpineLimaISO(),
 ];
 
 // Dependencies that are specific to macOS hosts.
 const macOSDependencies: Dependency[] = [
+  new SocketVMNet(),
+  new SudoPrompt(),
 ];
 
 // Dependencies that are specific to windows hosts.
 const windowsDependencies: Dependency[] = [
+  new WSLDistro(),
+  new WSLDistroImage(),
+  new Wix(),
 ];
 
 // Dependencies that are specific to WSL.
