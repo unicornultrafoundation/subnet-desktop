@@ -55,28 +55,39 @@ app.whenReady().then(async () => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on('install', async () => {
+    // Install containerd if not installed
+    if (!await isInstalled('containerd --version')) {
+      await installContainerd(mainWindow);
+    }
+
+    // Install CNI plugins if not installed
+    if (os.platform() === 'win32') {
+      if (!await isInstalled('test -d /opt/cni/bin')) {
+        await installCNIPlugins(mainWindow);
+      }
+    } else {
+      if (!await isInstalled('ls /opt/cni/bin')) {
+        await installCNIPlugins(mainWindow);
+      }
+    }
+
+    // Start containerd and then start subnet node
+    await startContainerd();
+    await startSubnetNode();
+  })
+  ipcMain.on('startSubnetNode', async () => {
+    await startSubnetNode()
+  })
+  ipcMain.on('stopSubnetNode', () => {
+    stopSubnetNode()
+  })
+  ipcMain.on('requestInstallStatus', async () => {
+    const installed = await isInstalled('containerd --version')
+    mainWindow.webContents.send('install-status', installed);
+  })
 
   createWindow()
-
-  // Install containerd if not installed
-  if (!await isInstalled('containerd --version')) {
-    await installContainerd(mainWindow);
-  }
-
-  // Install CNI plugins if not installed
-  if (os.platform() === 'win32') {
-    if (!await isInstalled('test -d /opt/cni/bin')) {
-      await installCNIPlugins(mainWindow);
-    }
-  } else {
-    if (!await isInstalled('ls /opt/cni/bin')) {
-      await installCNIPlugins(mainWindow);
-    }
-  }
-
-  // Start containerd and then start subnet node
-  await startContainerd();
-  await startSubnetNode();
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
@@ -96,7 +107,8 @@ app.on('window-all-closed', async () => {
   } else {
     stopSubnetNode();
     await stopContainerd();
-    stopLima();
+    // TODO: stop lima
+    // stopLima();
     app.quit();
   }
 })
@@ -119,6 +131,7 @@ app.on('before-quit', async function () {
   stopSubnetNode();
   await stopContainerd();
   if (os.platform() === 'darwin') {
-    stopLima();
+    // TODO: stop lima
+    // stopLima();
   }
 });

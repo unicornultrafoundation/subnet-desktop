@@ -6,7 +6,7 @@ type Props = {
   progress: number;
 }
 
-const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {;
+const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
   return (
     <div className="w-full flex flex-col border-t-[1px] border-neutral-900 pt-6 pb-16">
       <div className='w-full flex flex-col gap-6'>

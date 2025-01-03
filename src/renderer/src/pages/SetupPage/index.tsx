@@ -36,6 +36,11 @@ export default function SetupPage() {
     password: '',
   });
 
+  const startInstall = () => {
+    window.electron.ipcRenderer.send('install')
+    setCurrentStepIndex(2)
+  }
+
   const renderStepContent = useCallback(() => {
     switch (currentStepIndex) {
       case 0:
@@ -48,7 +53,7 @@ export default function SetupPage() {
       case 1:
         return <SetupNode
           onBack={() => setCurrentStepIndex(0)}
-          onContinue={() => setCurrentStepIndex(2)}
+          onContinue={() => startInstall()}
           nodeDetails={nodeDetails}
           setNodeDetails={(type, value) => setNodeDetails({ ...nodeDetails, [type]: value })}
         />;

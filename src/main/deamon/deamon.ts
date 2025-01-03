@@ -1,4 +1,4 @@
-import {exec, execFile, spawn} from 'child_process';
+import {exec, spawn} from 'child_process';
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
@@ -8,11 +8,11 @@ import http from 'http';
 import { BrowserWindow } from 'electron';
 
 const execAsync = util.promisify(exec);
-const execFileAsync = util.promisify(execFile);
+// const execFileAsync = util.promisify(execFile);
 
 let subnetNodeProcess;
 
-export async function isInstalled(command) {
+export async function isInstalled(command: string) {
   try {
     if (os.platform() === 'win32') {
       await execAsync(`wsl -d Ubuntu-24.04 -- ${command}`);
@@ -91,9 +91,11 @@ export async function installContainerd(mainWindow: BrowserWindow) {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(installCommand);
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
+    console.log('installCommand', installCommand)
+    // TODO: update command later
+    // const { stdout, stderr } = await execAsync(installCommand);
+    // console.log(`stdout: ${stdout}`);
+    // console.error(`stderr: ${stderr}`);
     mainWindow.webContents.send('install-progress', 'containerd installed successfully.');
   } catch (error) {
     console.error(`Error installing containerd: ${error}`);
@@ -141,9 +143,10 @@ export async function installCNIPlugins(mainWindow) {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(installCommand);
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
+    // TODO: update command later
+    // const { stdout, stderr } = await execAsync(installCommand);
+    // console.log(`stdout: ${stdout}`);
+    // console.error(`stderr: ${stderr}`);
     mainWindow.webContents.send('install-progress', 'CNI plugins installed successfully.');
   } catch (error) {
     console.error(`Error installing CNI plugins: ${error}`);
@@ -168,9 +171,10 @@ export async function startContainerd() {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(startCommand);
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
+    // TODO: update command later
+    // const { stdout, stderr } = await execAsync(startCommand);
+    // console.log(`stdout: ${stdout}`);
+    // console.error(`stderr: ${stderr}`);
     console.log('containerd started successfully.');
   } catch (error) {
     console.error(`Error starting containerd: ${error}`);
@@ -227,6 +231,7 @@ async function checkSubnetNodeStatus(retries = 5) {
         });
       }).on('error', (err) => {
         resolve(false);
+        console.log(err)
       });
     });
 
@@ -262,11 +267,11 @@ export async function startSubnetNode() {
   }
 
   try {
-    subnetNodeProcess = spawn(startCommand, [], {
-      detached: true,
-      stdio: 'ignore'
-    });
-    subnetNodeProcess.unref();
+    // subnetNodeProcess = spawn(startCommand, [], {
+    //   detached: true,
+    //   stdio: 'ignore'
+    // });
+    // subnetNodeProcess.unref();
     console.log('Subnet node started successfully.');
 
     // Check if the subnet node is running
@@ -291,68 +296,68 @@ export function stopSubnetNode() {
   }
 }
 
-export default async function createDaemon(app, mainWindow: BrowserWindow) {
-  app.whenReady().then(async () => {
-    // Install containerd if not installed
-    if (!await isInstalled('containerd --version')) {
-      await installContainerd(mainWindow);
-    }
+// export default async function createDaemon(app, mainWindow: BrowserWindow) {
+//   app.whenReady().then(async () => {
+//     // Install containerd if not installed
+//     if (!await isInstalled('containerd --version')) {
+//       await installContainerd(mainWindow);
+//     }
 
-    // Install CNI plugins if not installed
-    if (os.platform() === 'win32') {
-      if (!await isInstalled('test -d /opt/cni/bin')) {
-        await installCNIPlugins(mainWindow);
-      }
-    } else {
-      if (!await isInstalled('ls /opt/cni/bin')) {
-        await installCNIPlugins(mainWindow);
-      }
-    }
+//     // Install CNI plugins if not installed
+//     if (os.platform() === 'win32') {
+//       if (!await isInstalled('test -d /opt/cni/bin')) {
+//         await installCNIPlugins(mainWindow);
+//       }
+//     } else {
+//       if (!await isInstalled('ls /opt/cni/bin')) {
+//         await installCNIPlugins(mainWindow);
+//       }
+//     }
 
-    // Start containerd and then start subnet node
-    await startContainerd();
-    await startSubnetNode();
+//     // Start containerd and then start subnet node
+//     await startContainerd();
+//     await startSubnetNode();
 
-    app.on('activate', function () {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    });
-  });
+//     app.on('activate', function () {
+//       // On macOS it's common to re-create a window in the app when the
+//       // dock icon is clicked and there are no other windows open.
+//       if (BrowserWindow.getAllWindows().length === 0) createWindow();
+//     });
+//   });
 
-  // Quit when all windows are closed, except on macOS. There, it's common
-  // for applications and their menu bar to stay active until the user quits
-  // explicitly with Cmd + Q.
-  app.on('window-all-closed', async function () {
-    if (process.platform !== 'darwin') {
-      stopSubnetNode();
-      await stopContainerd();
-      app.quit();
-    } else {
-      stopSubnetNode();
-      await stopContainerd();
-      stopLima();
-      app.quit();
-    }
-  });
+//   // Quit when all windows are closed, except on macOS. There, it's common
+//   // for applications and their menu bar to stay active until the user quits
+//   // explicitly with Cmd + Q.
+//   app.on('window-all-closed', async function () {
+//     if (process.platform !== 'darwin') {
+//       stopSubnetNode();
+//       await stopContainerd();
+//       app.quit();
+//     } else {
+//       stopSubnetNode();
+//       await stopContainerd();
+//       stopLima();
+//       app.quit();
+//     }
+//   });
 
-  // Handle app restart
-  app.on('restart', async function () {
-    await restartAll();
-  });
+//   // Handle app restart
+//   app.on('restart', async function () {
+//     await restartAll();
+//   });
 
-  // Handle app start
-  app.on('start', async function () {
-    await startContainerd();
-    await startSubnetNode();
-  });
+//   // Handle app start
+//   app.on('start', async function () {
+//     await startContainerd();
+//     await startSubnetNode();
+//   });
 
-  // Handle app stop
-  app.on('stop', async function () {
-    stopSubnetNode();
-    await stopContainerd();
-    if (os.platform() === 'darwin') {
-      stopLima();
-    }
-  });
-}
+//   // Handle app stop
+//   app.on('stop', async function () {
+//     stopSubnetNode();
+//     await stopContainerd();
+//     if (os.platform() === 'darwin') {
+//       stopLima();
+//     }
+//   });
+// }
