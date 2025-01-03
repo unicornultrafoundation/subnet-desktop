@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import Button from '@renderer/components/Button'
 
 type Props = {
@@ -7,9 +6,7 @@ type Props = {
   progress: number;
 }
 
-const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
-  const [isShowPassword, setIsShowPassword] = useState(false);
-
+const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {;
   return (
     <div className="w-full flex flex-col border-t-[1px] border-neutral-900 pt-6 pb-16">
       <div className='w-full flex flex-col gap-6'>
@@ -19,7 +16,7 @@ const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
               width: `${progress}%`,
               transition: 'width 0.1s ease-in-out',
             }}
-            className="h-full bg-[#3C9]" />
+            className={`h-full bg-[#3C9]`} />
         </div>
         <div className='w-full flex items-center justify-between'>
           <div className='text-[#33CC99] text-[16px] font-semibold'>
