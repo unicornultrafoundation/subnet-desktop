@@ -11,7 +11,7 @@ const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
   const [isShowPassword, setIsShowPassword] = useState(false);
 
   return (
-    <div className="w-full flex flex-col border-t-[1px] border-neutral-900 py-6 ">
+    <div className="w-full flex flex-col border-t-[1px] border-neutral-900 pt-6 pb-16">
       <div className='w-full flex flex-col gap-6'>
         <div className='w-full bg-[#272727] h-[52px] rounded-[8px] overflow-hidden'>
           <div

@@ -2,14 +2,14 @@ import Location from '@/assets/images/location.png'
 import Profile from '@/assets/images/profile.png'
 import Password from '@/assets/images/password.png'
 import Show from '@/assets/images/show.png'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Button from '@renderer/components/Button'
 
 type Props = {
   onContinue: () => void;
   onBack: () => void;
   nodeDetails: {
-    port: string;
+    port: number;
     username: string;
     password: string;
   }
@@ -19,8 +19,19 @@ type Props = {
 const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDetails }) => {
   const [isShowPassword, setIsShowPassword] = useState(false);
 
+  const isValid = useMemo(() => {
+    if (nodeDetails.port < 0 || nodeDetails.port > 65535) {
+      return false;
+    }
+    if (nodeDetails.username.trim().length === 0 || nodeDetails.password.trim().length === 0
+    ) {
+      return false;
+    }
+    return true;
+  }, [nodeDetails])
+
   return (
-    <div className="w-full flex flex-col border-t-[1px] border-neutral-900 py-6 ">
+    <div className="w-full flex flex-col border-t-[1px] border-neutral-900 pt-6 pb-16">
       <div className='w-full flex flex-col gap-6'>
         <div className="w-full flex flex-col gap-3">
           <div className="w-full text-[14px] font-semibold">
@@ -29,9 +40,10 @@ const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDe
           <div className="w-full rounded-[8px] bg-[#272727] p-3 flex flex-row gap-2">
             <img src={Location} width={24} height={24} />
             <input
-              className="flex-1 bg-transparent outline-none font-medium text-[16px]"
+              className="flex-1 bg-transparent !outline-none !border-none !py-0 !px-0 font-medium text-[16px]"
               placeholder="Enter your port"
               value={nodeDetails.port}
+              type='number'
               onChange={(e) => setNodeDetails('port', e.target.value)} />
           </div>
         </div>
@@ -72,7 +84,7 @@ const SetupNode: React.FC<Props> = ({ onBack, onContinue, nodeDetails, setNodeDe
         <Button type="secondary" className='w-1/2' onClick={onBack}>
           <span className="font-semibold text-[14px]">GO BACK</span>
         </Button>
-        <Button type="primary" className='w-1/2' onClick={onContinue}>
+        <Button disabled={!isValid} type="primary" className='w-1/2' onClick={onContinue}>
           <span className="font-semibold text-[14px]">CONTINUE</span>
         </Button>
       </div>

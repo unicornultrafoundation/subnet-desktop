@@ -24,35 +24,21 @@ const initialSteps: SetupStep[] = [
 ]
 
 export default function SetupPage() {
-  const [currentStepIndex, setCurrentStepIndex] = useState(2);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps,] = useState<SetupStep[]>(initialSteps);
-  const [progress, setProgress] = useState(0);
-  const [isInstallSuccess, setIsInstallSuccess] = useState(false);
+  const [progress, setProgress] = useState(100);
+  const [isInstallSuccess,] = useState(false);
   const interval = useRef<any>(null);
   const [nodeDetails, setNodeDetails] = useState({
-    port: '',
+    port: 0,
     username: '',
     password: '',
   });
 
-  useEffect(() => {
-    setInterval(() => {
-      interval.current = setProgress((prev) => {
-        if (prev < 100) {
-          const rndInt = Math.floor(Math.random() * 5) + 1
-          return prev + rndInt > 100 ? 100 : prev + rndInt;
-        }
-        clearInterval(interval.current);
-        return prev;
-      });
-      return () => clearInterval(interval.current);
-    }, 500);
-  }, [])
-
   const renderStepContent = useCallback(() => {
     switch (currentStepIndex) {
       case 0:
-        return <div className="w-full flex flex-col items-center">
+        return <div className="w-full flex flex-col items-center pb-16">
           <img src={LogoU2U} width={'65%'} className="max-w-[710px]" />
           <Button type="primary" className="w-full" onClick={() => setCurrentStepIndex(1)}>
             <span className="font-semibold text-[14px]">INSTALL</span>
@@ -74,7 +60,7 @@ export default function SetupPage() {
       case 3:
         if (!isInstallSuccess) {
           return (
-            <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full flex flex-col items-center justify-center pb-16">
               <img src={IFailed} width={100} className="max-w-[710px]" />
               <div className="w-full text-center text-balance font-semibold text-[24px] pt-8">
                 Installed Failed
@@ -82,14 +68,14 @@ export default function SetupPage() {
               <div className="w-3/4 text-center text-balance font-normal text-[16px] text-[#B4B4B4] pt-4">
                 Ooops! There was something wrong about the installation process. Please try to restart your computer and install it again to make sure everything is running properly.
               </div>
-              <Button type="secondary" className="px-16 py-8 mt-8" onClick={() => setCurrentStepIndex(1)}>
+              <Button type="secondary" className="!px-16 !py-3 mt-8" onClick={() => setCurrentStepIndex(1)}>
                 <span className="font-semibold text-[14px]">GO BACK</span>
               </Button>
             </div>
           )
         }
         return (
-          <div className="w-full h-full flex flex-col items-center justify-center">
+          <div className="w-full h-full flex flex-col items-center justify-center pb-16">
             <img src={ISuccess} width={100} className="max-w-[710px]" />
             <div className="w-full text-center text-balance font-semibold text-[24px] pt-8">
               Installed Successfully
@@ -97,7 +83,7 @@ export default function SetupPage() {
             <div className="w-3/4 text-center text-balance font-normal text-[16px] text-[#B4B4B4] pt-4">
               Congratulations! You’ve successfully installed Node Desktop Application by U2U Network
             </div>
-            <Button type="primary" className="px-16 py-8 mt-8" onClick={() => setCurrentStepIndex(1)}>
+            <Button type="primary" className="!px-16 !py-3 mt-8" onClick={() => setCurrentStepIndex(1)}>
               <span className="font-semibold text-[14px]">FINISH</span>
             </Button>
           </div>
@@ -131,7 +117,7 @@ export default function SetupPage() {
             style={{
               height: 'calc(100vh - 100px)',
             }}
-            className="w-full overflow-y-auto pb-14">
+            className="w-full overflow-y-auto">
             <StepContent currStep={initialSteps[currentStepIndex]}>
               {renderStepContent()}
             </StepContent>
