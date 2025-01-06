@@ -8,6 +8,9 @@
     "src/utils/**/*",
     "scripts/**/*",
     "src/**/*.d.ts",
+    "src/assets/**/*",
+    "src/backend/**/*",
+    "src/config/**/*",
   ],
   "compilerOptions": {
     "composite": true,

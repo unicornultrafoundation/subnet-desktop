@@ -3,16 +3,25 @@ import paths from '../utils/paths'
 import os from 'os';
 import * as childProcess from '../utils/childProcess';
 import events from 'events';
-import { BackendError, BackendEvents, BackendProgress, BackendSettings, execOptions, FailureDetails, RestartReasons, State, VMBackend, VMExecutor } from "./backend";
+import { Architecture, BackendError, BackendEvents, BackendProgress, BackendSettings, execOptions, FailureDetails, RestartReasons, State, VMBackend, VMExecutor } from "./backend";
 import ProgressTracker from "./progressTracker";
 import clone from '../utils/clone';
 import { omit } from "lodash";
 import { ChildProcess, spawn as spawnWithSignal } from 'child_process';
 import { RecursivePartial } from "../utils/typeUtils";
 import Logging from '../utils/logging';
+import fs from 'fs';
 
 export const MACHINE_NAME = '0';
 const console = Logging.lima;
+/**
+ * Symbolic names for various SLIRP IP addresses.
+ */
+enum SLIRP {
+    HOST_GATEWAY = '192.168.5.2',
+    DNS = '192.168.5.3',
+    GUEST_IP_ADDRESS = '192.168.5.15',
+}
 
 /**
  * One entry from `limactl list --json`
@@ -52,7 +61,10 @@ export enum Action {
  */
 const VMNET_DIR = '/opt/subnet-desktop';
 
-export class LimaBackend extends events.EventEmitter implements VMBackend {
+export class LimaBackend extends events.EventEmitter implements VMBackend,VMExecutor {
+    readonly executor = this;
+
+
     rawListeners<eventName extends keyof BackendEvents>(event: eventName): BackendEvents[eventName][] {
         return super.rawListeners(event) as BackendEvents[eventName][];
     }
@@ -65,7 +77,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend {
     /** Helper object to manage progress notifications. */
     progressTracker;
 
-    constructor() {
+    constructor(_arch: Architecture) {
         super()
 
         this.progressTracker = new ProgressTracker((progress) => {
@@ -73,29 +85,54 @@ export class LimaBackend extends events.EventEmitter implements VMBackend {
             this.emit('progress');
         }, console);
     }
-    cpus: Promise<number>;
-    memory: Promise<number>;
+    get cpus(): Promise<number> {
+        // This doesn't make sense for WSL2, since that's a global configuration.
+        return Promise.resolve(0);
+    }
+
+    get memory(): Promise<number> {
+        // This doesn't make sense for WSL2, since that's a global configuration.
+        return Promise.resolve(0);
+    }
+
     getBackendInvalidReason(): Promise<BackendError | null> {
         throw new Error("Method not implemented.");
     }
     del(): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    reset(config: BackendSettings): Promise<void> {
+    reset(_config: BackendSettings): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    handleSettingsUpdate(config: BackendSettings): Promise<void> {
+    handleSettingsUpdate(_config: BackendSettings): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    requiresRestartReasons(config: RecursivePartial<BackendSettings>): Promise<RestartReasons> {
+    requiresRestartReasons(_config: RecursivePartial<BackendSettings>): Promise<RestartReasons> {
         throw new Error("Method not implemented.");
     }
-    ipAddress: Promise<string | undefined>;
-    getFailureDetails(exception: any): Promise<FailureDetails> {
+
+    /**
+     * Get the IPv4 address of the VM. This address should be routable from within the VM itself.
+     * In Lima the SLIRP guest IP address is hard-coded.
+     */
+    get ipAddress(): Promise<string | undefined> {
+        return Promise.resolve(SLIRP.GUEST_IP_ADDRESS);
+    }
+
+    getFailureDetails(_config: any): Promise<FailureDetails> {
         throw new Error("Method not implemented.");
     }
-    noModalDialogs: boolean;
-    executor: VMExecutor;
+    /** A transient property that prevents prompting via modal UI elements. */
+    #noModalDialogs = false;
+
+    get noModalDialogs() {
+        return this.#noModalDialogs;
+    }
+
+    set noModalDialogs(value: boolean) {
+        this.#noModalDialogs = value;
+    }
+
 
     progress: BackendProgress = { current: 0, max: 0 };
     debug = false;
@@ -372,4 +409,85 @@ export class LimaBackend extends events.EventEmitter implements VMBackend {
 
         return await this.spawnWithCapture(LimaBackend.limactl, options, ...args);
     }
+
+    async readFile(filePath: string, options?: { encoding?: BufferEncoding }): Promise<string> {
+        const encoding = options?.encoding ?? 'utf-8';
+        const stdout: Buffer[] = [];
+        const stderr: Buffer[] = [];
+    
+        try {
+          // Use limaSpawn to avoid logging file contents (too verbose).
+          const proc = this.limaSpawn({ root: true }, ['/bin/cat', filePath]);
+    
+          await new Promise<void>((resolve, reject) => {
+            proc.stdout?.on('data', (chunk: Buffer | string) => {
+              stdout.push(Buffer.from(chunk));
+            });
+            proc.stderr?.on('data', (chunk: Buffer | string) => {
+              stderr.push(Buffer.from(chunk));
+            });
+            proc.on('error', reject);
+            proc.on('exit', (code, signal) => {
+              if (code || signal) {
+                return reject(new Error(`Failed to read ${ filePath }: /bin/cat exited with ${ code || signal }`));
+              }
+              resolve();
+            });
+          });
+    
+          return Buffer.concat(stdout).toString(encoding);
+        } catch (ex: any) {
+          console.error(`Failed to read file ${ filePath }:`, ex);
+          if (stderr.length) {
+            console.error(Buffer.concat(stderr).toString('utf-8'));
+          }
+          if (stdout.length) {
+            console.error(Buffer.concat(stdout).toString('utf-8'));
+          }
+          throw ex;
+        }
+      }
+    
+      /**
+       * Write the given contents to a given file name in the VM.
+       * The file will be owned by root.
+       * @param filePath The destination file path, in the VM.
+       * @param fileContents The contents of the file.
+       * @param permissions The file permissions.
+       */
+      async writeFile(filePath: string, fileContents: string, permissions: fs.Mode = 0o644) {
+        const workdir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `rd-${ path.basename(filePath) }-`));
+        const tempPath = `/tmp/${ path.basename(workdir) }.${ path.basename(filePath) }`;
+    
+        try {
+          const scriptPath = path.join(workdir, path.basename(filePath));
+    
+          await fs.promises.writeFile(scriptPath, fileContents, 'utf-8');
+          await this.lima('copy', scriptPath, `${ MACHINE_NAME }:${ tempPath }`);
+          await this.execCommand('chmod', permissions.toString(8), tempPath);
+          await this.execCommand({ root: true }, 'mv', tempPath, filePath);
+        } finally {
+          await fs.promises.rm(workdir, { recursive: true });
+          await this.execCommand({ root: true }, 'rm', '-f', tempPath);
+        }
+      }
+    
+      async copyFileIn(hostPath: string, vmPath: string): Promise<void> {
+        // TODO This logic is copied from writeFile() above and should be simplified.
+        const workdir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `rd-${ path.basename(hostPath) }-`));
+        const tempPath = `/tmp/${ path.basename(workdir) }.${ path.basename(hostPath) }`;
+    
+        try {
+          await this.lima('copy', hostPath, `${ MACHINE_NAME }:${ tempPath }`);
+          await this.execCommand('chmod', '644', tempPath);
+          await this.execCommand({ root: true }, 'mv', tempPath, vmPath);
+        } finally {
+          await fs.promises.rm(workdir, { recursive: true });
+          await this.execCommand({ root: true }, 'rm', '-f', tempPath);
+        }
+      }
+    
+      copyFileOut(vmPath: string, hostPath: string): Promise<void> {
+        return this.lima('copy', `${ MACHINE_NAME }:${ vmPath }`, hostPath);
+      }
 }

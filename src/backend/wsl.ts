@@ -1,5 +1,5 @@
 import events from 'events';
-import { BackendError, BackendEvents, BackendProgress, BackendSettings, execOptions, FailureDetails, RestartReasons, State, VMBackend, VMExecutor } from './backend';
+import { Architecture, BackendError, BackendEvents, BackendProgress, BackendSettings, execOptions, FailureDetails, RestartReasons, State, VMBackend, VMExecutor } from './backend';
 import * as childProcess from '../utils/childProcess';
 import ProgressTracker, { getProgressErrorDescription } from './progressTracker';
 import BackgroundProcess from '../utils/backgroundProcess';
@@ -11,7 +11,8 @@ import util from 'util';
 import * as reg from 'native-reg';
 import os from 'os';
 import DEPENDENCY_VERSIONS from '@pkg/assets/dependencies.yaml';
-import { defined, RecursivePartial } from '../utils/typeUtils';
+import { defined, RecursivePartial } from '@pkg/utils/typeUtils';
+import _ from 'lodash';
 
 
 /** The version of the WSL distro we expect. */
@@ -39,10 +40,11 @@ export enum Action {
     STOPPING = 'stopping',
 }
 
-export default class WSLBackend extends events.EventEmitter implements VMBackend {
+export default class WSLBackend extends events.EventEmitter implements VMBackend, VMExecutor {
     progressTracker: ProgressTracker
     progress: BackendProgress = { current: 0, max: 0 };
     debug = false;
+    readonly executor = this;
     /**
      * Reference to the _init_ process in WSL.  All other processes should be
      * children of this one.  Note that this is busybox init, running in a custom
@@ -82,7 +84,7 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
      */
     protected hostSwitchProcess: BackgroundProcess;
 
-    constructor() {
+    constructor(_arch: Architecture) {
         super();
         this.progressTracker = new ProgressTracker((progress) => {
             this.progress = progress;
@@ -103,21 +105,74 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         });
 
     }
-    backend: 'wsl' | 'lima' | 'mock';
-    cpus: Promise<number>;
-    memory: Promise<number>;
+    get backend(): 'wsl' {
+        return 'wsl';
+    }
+    get cpus(): Promise<number> {
+        // This doesn't make sense for WSL2, since that's a global configuration.
+        return Promise.resolve(0);
+    }
+
+    get memory(): Promise<number> {
+        // This doesn't make sense for WSL2, since that's a global configuration.
+        return Promise.resolve(0);
+    }
+
     getBackendInvalidReason(): Promise<BackendError | null> {
         throw new Error('Method not implemented.');
     }
-    handleSettingsUpdate(config: BackendSettings): Promise<void> {
+    handleSettingsUpdate(_config: BackendSettings): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    requiresRestartReasons(config: RecursivePartial<BackendSettings>): Promise<RestartReasons> {
+    requiresRestartReasons(_config: RecursivePartial<BackendSettings>): Promise<RestartReasons> {
         throw new Error('Method not implemented.');
     }
-    ipAddress: Promise<string | undefined>;
-    noModalDialogs: boolean;
-    executor: VMExecutor;
+
+
+    /** Get the IPv4 address of the VM, assuming it's already up. */
+    get ipAddress(): Promise<string | undefined> {
+        return (async () => {
+            // When using mirrored-mode networking, 127.0.0.1 works just fine
+            // ...also, there may not even be an `eth0` to find the IP of!
+            try {
+                const networkModeString = await this.captureCommand('wslinfo', '-n', '--networking-mode');
+
+                if (networkModeString === 'mirrored') {
+                    return '127.0.0.1';
+                }
+            } catch {
+                // wslinfo is missing (wsl < 2.0.4) - fall back to old behavior
+            }
+
+            // We need to locate the _local_ route (netmask) for eth0, and then
+            // look it up in /proc/net/fib_trie to find the local address.
+            const routesString = await this.captureCommand('cat', '/proc/net/route');
+            const routes = routesString.split(/\r?\n/).map(line => line.split(/\s+/));
+            const route = routes.find(route => route[0] === 'eth0' && route[1] !== '00000000');
+
+            if (!route) {
+                return undefined;
+            }
+            const net = Array.from(route[1].matchAll(/../g)).reverse().map(n => parseInt(n.toString(), 16)).join('.');
+            const trie = await this.captureCommand('cat', '/proc/net/fib_trie');
+            const lines = _.takeWhile(trie.split(/\r?\n/).slice(1), line => /^\s/.test(line));
+            const iface = _.dropWhile(lines, line => !line.includes(`${net}/`));
+            const addr = iface.find((_, i, array) => array[i + 1]?.includes('/32 host LOCAL'));
+
+            return addr?.split(/\s+/).pop();
+        })();
+    }
+
+    /** A transient property that prevents prompting via modal UI elements. */
+    #noModalDialogs = false;
+
+    get noModalDialogs() {
+        return this.#noModalDialogs;
+    }
+
+    set noModalDialogs(value: boolean) {
+        this.#noModalDialogs = value;
+    }
 
     /** Indicates whether the current installation is an Admin Install. */
     #isAdminInstall: Promise<boolean> | undefined;
@@ -274,8 +329,8 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         await this.setState(State.STARTING);
         this.currentAction = Action.STARTING;
 
-        await this.progressTracker.action('Initializing Subnet Desktop', 10, async() => {
-            
+        await this.progressTracker.action('Initializing Subnet Desktop', 10, async () => {
+
         })
     }
 
@@ -361,34 +416,34 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
     /**
    * List the registered WSL2 distributions.
    */
-  protected async registeredDistros({ runningOnly = false } = {}): Promise<string[]> {
-    const args = ['--list', '--quiet', runningOnly ? '--running' : undefined];
-    const distros = (await this.execWSL({ capture: true }, ...args.filter(defined)))
-      .split(/\r?\n/g)
-      .map(x => x.trim())
-      .filter(x => x);
+    protected async registeredDistros({ runningOnly = false } = {}): Promise<string[]> {
+        const args = ['--list', '--quiet', runningOnly ? '--running' : undefined];
+        const distros = (await this.execWSL({ capture: true }, ...args.filter(defined)))
+            .split(/\r?\n/g)
+            .map(x => x.trim())
+            .filter(x => x);
 
-    if (distros.length < 1) {
-      // Return early if we find no distributions in this list; listing again
-      // with verbose will fail if there are no distributions.
-      return [];
+        if (distros.length < 1) {
+            // Return early if we find no distributions in this list; listing again
+            // with verbose will fail if there are no distributions.
+            return [];
+        }
+
+        const stdout = await this.execWSL({ capture: true }, '--list', '--verbose');
+        // As wsl.exe may be localized, don't check state here.
+        const parser = /^[\s*]+(?<name>.*?)\s+\w+\s+(?<version>\d+)\s*$/;
+
+        const result = stdout.trim()
+            .split(/[\r\n]+/)
+            .slice(1) // drop the title row
+            .map(line => line.match(parser))
+            .filter(defined)
+            .filter(result => result.groups?.version === '2')
+            .map(result => result.groups?.name)
+            .filter(defined);
+
+        return result.filter(x => distros.includes(x));
     }
-
-    const stdout = await this.execWSL({ capture: true }, '--list', '--verbose');
-    // As wsl.exe may be localized, don't check state here.
-    const parser = /^[\s*]+(?<name>.*?)\s+\w+\s+(?<version>\d+)\s*$/;
-
-    const result = stdout.trim()
-      .split(/[\r\n]+/)
-      .slice(1) // drop the title row
-      .map(line => line.match(parser))
-      .filter(defined)
-      .filter(result => result.groups?.version === '2')
-      .map(result => result.groups?.name)
-      .filter(defined);
-
-    return result.filter(x => distros.includes(x));
-  }
 
     protected async isDistroRegistered({ distribution = INSTANCE_NAME, runningOnly = false } = {}): Promise<boolean> {
         const distros = await this.registeredDistros({ runningOnly });
@@ -606,4 +661,27 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         return super.rawListeners(event) as BackendEvents[eventName][];
     }
     // #endregion
+
+    /**
+   * Write the given contents to a given file name in the VM.
+   * The file will be owned by root.
+   * @param filePath The destination file path, in the VM.
+   * @param fileContents The contents of the file.
+   * @param permissions The file permissions.
+   */
+    async writeFile(filePath: string, fileContents: string, permissions: fs.Mode = 0o644) {
+        await this.writeFileWSL(filePath, fileContents, { permissions });
+    }
+
+    async copyFileIn(hostPath: string, vmPath: string): Promise<void> {
+        // Sometimes WSL has issues copying _from_ the VM.  So we instead do the
+        // copying from inside the VM.
+        await this.execCommand('/bin/cp', '-f', '-T', await this.wslify(hostPath), vmPath);
+    }
+
+    async copyFileOut(vmPath: string, hostPath: string): Promise<void> {
+        // Sometimes WSL has issues copying _from_ the VM.  So we instead do the
+        // copying from inside the VM.
+        await this.execCommand('/bin/cp', '-f', '-T', vmPath, await this.wslify(hostPath));
+    }
 }

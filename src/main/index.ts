@@ -2,7 +2,35 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import daemon from '../daemon'
+import VmFactory from '@pkg/backend/factory';
+import util from 'util';
+
+
+function newVmManager() {
+  const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
+  const mgr = VmFactory(arch);
+  return mgr;
+}
+
+const vmmanager = newVmManager();
+
+async function startBackend() {
+  try {
+    await startVmManager();
+  } catch (err) {
+    handleFailure(err);
+  }
+}
+
+
+async function startVmManager() {
+  await vmmanager.start({});
+}
+
+async function handleFailure(payload: any) {
+  console.log(payload)
+}
+
 
 function createWindow(): void {
   // Create the browser window.
@@ -39,7 +67,7 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -53,7 +81,6 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  daemon.createDaemon(app),
   createWindow()
 
   app.on('activate', function () {
@@ -61,6 +88,8 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  await startBackend();
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
