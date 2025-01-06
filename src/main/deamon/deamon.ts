@@ -6,6 +6,7 @@ import util from 'util';
 import https from 'https';
 import http from 'http';
 import { BrowserWindow } from 'electron';
+import { sleep } from '../utils/promise';
 
 const execAsync = util.promisify(exec);
 // const execFileAsync = util.promisify(execFile);
@@ -91,11 +92,11 @@ export async function installContainerd(mainWindow: BrowserWindow) {
   }
 
   try {
-    console.log('installCommand', installCommand)
     // TODO: update command later
     // const { stdout, stderr } = await execAsync(installCommand);
     // console.log(`stdout: ${stdout}`);
     // console.error(`stderr: ${stderr}`);
+    await sleep(5000)
     mainWindow.webContents.send('install-progress', 'containerd installed successfully.');
   } catch (error) {
     console.error(`Error installing containerd: ${error}`);
@@ -147,6 +148,7 @@ export async function installCNIPlugins(mainWindow) {
     // const { stdout, stderr } = await execAsync(installCommand);
     // console.log(`stdout: ${stdout}`);
     // console.error(`stderr: ${stderr}`);
+    await sleep(5000)
     mainWindow.webContents.send('install-progress', 'CNI plugins installed successfully.');
   } catch (error) {
     console.error(`Error installing CNI plugins: ${error}`);
@@ -175,6 +177,7 @@ export async function startContainerd() {
     // const { stdout, stderr } = await execAsync(startCommand);
     // console.log(`stdout: ${stdout}`);
     // console.error(`stderr: ${stderr}`);
+    await sleep(5000)
     console.log('containerd started successfully.');
   } catch (error) {
     console.error(`Error starting containerd: ${error}`);

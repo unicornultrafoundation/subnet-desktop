@@ -53,8 +53,8 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // IPC command
+  // ipcMain.on('ping', () => console.log('pong'))
   ipcMain.on('install', async () => {
     // Install containerd if not installed
     if (!await isInstalled('containerd --version')) {
@@ -73,13 +73,15 @@ app.whenReady().then(async () => {
     }
 
     // Start containerd and then start subnet node
-    await startContainerd();
-    await startSubnetNode();
+    // await startContainerd();
+    // await startSubnetNode();
   })
   ipcMain.on('startSubnetNode', async () => {
+    await startContainerd();
     await startSubnetNode()
   })
-  ipcMain.on('stopSubnetNode', () => {
+  ipcMain.on('stopSubnetNode', async () => {
+    await stopContainerd();
     stopSubnetNode()
   })
   ipcMain.on('requestInstallStatus', async () => {
