@@ -1,4 +1,6 @@
 import Button from '@renderer/components/Button'
+import { useGlobalStore } from '@renderer/state/global';
+import { useEffect, useState } from 'react';
 
 type Props = {
   onContinue: () => void;
@@ -7,6 +9,15 @@ type Props = {
 }
 
 const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
+  const {installProgress} = useGlobalStore()
+  const [steps, setSteps] = useState<string[]>([])
+
+  useEffect(() => {
+    if (installProgress !== '') {
+      setSteps([...steps, ...[installProgress]])
+    }
+  }, [installProgress])
+
   return (
     <div className="w-full flex flex-col border-t-[1px] border-neutral-900 pt-6 pb-16">
       <div className='w-full flex flex-col gap-6'>
@@ -27,11 +38,31 @@ const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
           </div>
         </div>
       </div>
+      <div>
+        {steps.map((step, index) => {
+          return <div key={`step-${index}`}>{step}</div>
+        })}
+      </div>
       <div className='w-full flex items-center justify-between gap-6 mt-16'>
-        <Button type="secondary" className='w-1/2' onClick={onBack}>
+        <Button
+          type="secondary"
+          className='w-1/2'
+          onClick={() => {
+            setSteps([])
+            onBack()
+          }}
+        >
           <span className="font-semibold text-[14px]">GO BACK</span>
         </Button>
-        <Button disabled={progress < 100} type="primary" className='w-1/2' onClick={onContinue}>
+        <Button
+          disabled={progress < 100}
+          type="primary"
+          className='w-1/2'
+          onClick={() => {
+            setSteps([])
+            onContinue()
+          }}
+        >
           <span className="font-semibold text-[14px]">CONTINUE</span>
         </Button>
       </div>

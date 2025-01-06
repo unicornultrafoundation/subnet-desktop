@@ -4,6 +4,7 @@ import ToastProvider from './components/ToastProvider'
 import { useAuthStore } from './state/auth'
 import { ReactNode, useEffect } from 'react'
 import SetupPage from './pages/SetupPage'
+import { useGlobalStore } from './state/global'
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,7 @@ const router = createBrowserRouter([
 
 function App(): ReactNode {
   const { alreadySetup, setAlreadySetup } = useAuthStore()
+  const { setInstallProgress } = useGlobalStore()
 
   useEffect(() => {
     window.electron.ipcRenderer.on('install-status', (_, value) => {
@@ -23,6 +25,7 @@ function App(): ReactNode {
 
     window.electron.ipcRenderer.on('install-progress', (_, value) => {
       console.log('install-progress', value)
+      setInstallProgress(value)
     })
   }, [])
 

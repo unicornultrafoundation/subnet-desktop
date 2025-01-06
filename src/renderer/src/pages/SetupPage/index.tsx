@@ -1,7 +1,7 @@
 import Footer from "@renderer/components/Footer";
 import APP_LOGO from "@/assets/images/app_logo.png"
 import SetupSteps from "./SetupSteps";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import StepContent from "./StepContent";
 import LogoU2U from '@/assets/images/logo-u2u.png';
 import ISuccess from '@/assets/images/i-success.png';
@@ -10,6 +10,7 @@ import Button from "@renderer/components/Button";
 import SetupNode from "./SetupNode";
 import Installation from "./Installation";
 import { useAuthStore } from "@renderer/state/auth";
+import { useGlobalStore } from "@renderer/state/global";
 
 export type SetupStep = {
   title: string;
@@ -26,10 +27,11 @@ const initialSteps: SetupStep[] = [
 
 export default function SetupPage() {
   const { setAlreadySetup } = useAuthStore();
+  const { installProgress } = useGlobalStore()
+
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps,] = useState<SetupStep[]>(initialSteps);
-  const [progress, setProgress] = useState(100);
-  const [isInstallSuccess, setInstallSuccess] = useState(true);
+  const [isInstallSuccess, setInstallSuccess] = useState(false);
   const [nodeDetails, setNodeDetails] = useState({
     port: 0,
     username: '',
@@ -40,6 +42,21 @@ export default function SetupPage() {
     window.electron.ipcRenderer.send('install')
     setCurrentStepIndex(2)
   }
+
+  const progress = useMemo(() => {
+    switch (installProgress) {
+      case 'Installing containerd...':
+        return 0
+      case 'containerd installed successfully.':
+      case 'Installing CNI plugins':
+        return 25
+      case 'CNI plugins installed successfully.':
+        setInstallSuccess(true)
+        return 100
+      default:
+        return 0
+    }
+  }, [installProgress])
 
   const renderStepContent = useCallback(() => {
     switch (currentStepIndex) {
@@ -87,7 +104,7 @@ export default function SetupPage() {
               Installed Successfully
             </div>
             <div className="w-3/4 text-center text-balance font-normal text-[16px] text-[#B4B4B4] pt-4">
-              Congratulations! You’ve successfully installed Node Desktop Application by U2U Network
+              Congratulations! You've successfully installed Node Desktop Application by U2U Network
             </div>
             <Button type="primary" className="!px-16 !py-3 mt-8" onClick={() => setAlreadySetup(true)}>
               <span className="font-semibold text-[14px]">FINISH</span>
