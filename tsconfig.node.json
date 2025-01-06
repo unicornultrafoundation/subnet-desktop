@@ -6,8 +6,8 @@
     "src/preload/**/*",
     "src/daemon/**/*",
     "src/utils/**/*",
-    "scripts/**/*"
-    
+    "scripts/**/*",
+    "src/**/*.d.ts",
   ],
   "compilerOptions": {
     "composite": true,
@@ -16,7 +16,8 @@
       "electron-vite/node"
     ],
     "paths": {
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@pkg/*": ["src/*"],
     }
   }
 }

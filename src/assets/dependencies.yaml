@@ -1,0 +1,7 @@
+lima: 1.0.2.rd1
+WSLDistro: "0.76"
+wix: v3.14.1
+socketVMNet: 1.2.1
+alpineLimaISO:
+  isoVersion: 0.2.41.rd4
+  alpineVersion: 3.20.3

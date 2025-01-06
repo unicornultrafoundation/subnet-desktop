@@ -3,13 +3,16 @@ import paths from '../utils/paths'
 import os from 'os';
 import * as childProcess from '../utils/childProcess';
 import events from 'events';
-import { BackendProgress, execOptions, State } from "./backend";
+import { BackendError, BackendEvents, BackendProgress, BackendSettings, execOptions, FailureDetails, RestartReasons, State, VMBackend, VMExecutor } from "./backend";
 import ProgressTracker from "./progressTracker";
 import clone from '../utils/clone';
 import { omit } from "lodash";
 import { ChildProcess, spawn as spawnWithSignal } from 'child_process';
+import { RecursivePartial } from "../utils/typeUtils";
+import Logging from '../utils/logging';
 
 export const MACHINE_NAME = '0';
+const console = Logging.lima;
 
 /**
  * One entry from `limactl list --json`
@@ -49,7 +52,16 @@ export enum Action {
  */
 const VMNET_DIR = '/opt/subnet-desktop';
 
-export class LimaBackend extends events.EventEmitter {
+export class LimaBackend extends events.EventEmitter implements VMBackend {
+    rawListeners<eventName extends keyof BackendEvents>(event: eventName): BackendEvents[eventName][] {
+        return super.rawListeners(event) as BackendEvents[eventName][];
+    }
+    listeners<eventName extends keyof BackendEvents>(event: eventName): BackendEvents[eventName][] {
+        return super.listeners(event) as BackendEvents[eventName][];
+    }
+    eventNames(): (keyof BackendEvents)[] {
+        return super.eventNames() as (keyof BackendEvents)[];
+    }
     /** Helper object to manage progress notifications. */
     progressTracker;
 
@@ -59,8 +71,31 @@ export class LimaBackend extends events.EventEmitter {
         this.progressTracker = new ProgressTracker((progress) => {
             this.progress = progress;
             this.emit('progress');
-        });
+        }, console);
     }
+    cpus: Promise<number>;
+    memory: Promise<number>;
+    getBackendInvalidReason(): Promise<BackendError | null> {
+        throw new Error("Method not implemented.");
+    }
+    del(): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    reset(config: BackendSettings): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    handleSettingsUpdate(config: BackendSettings): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    requiresRestartReasons(config: RecursivePartial<BackendSettings>): Promise<RestartReasons> {
+        throw new Error("Method not implemented.");
+    }
+    ipAddress: Promise<string | undefined>;
+    getFailureDetails(exception: any): Promise<FailureDetails> {
+        throw new Error("Method not implemented.");
+    }
+    noModalDialogs: boolean;
+    executor: VMExecutor;
 
     progress: BackendProgress = { current: 0, max: 0 };
     debug = false;
