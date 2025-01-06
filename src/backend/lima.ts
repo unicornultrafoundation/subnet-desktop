@@ -118,25 +118,41 @@ export class LimaBackend extends events.EventEmitter {
 
     }
 
-      /**
-   * Get the current Lima VM status, or undefined if there was an error
-   * (e.g. the machine is not registered).
-   */
-  protected get status(): Promise<LimaListResult | undefined> {
-    return (async() => {
-      try {
-        const { stdout } = await this.limaWithCapture('list', '--json');
-        const lines = stdout.split(/\r?\n/).filter(x => x.trim());
-        const entries = lines.map(line => JSON.parse(line) as LimaListResult);
+    /**
+ * Get the current Lima VM status, or undefined if there was an error
+ * (e.g. the machine is not registered).
+ */
+    protected get status(): Promise<LimaListResult | undefined> {
+        return (async () => {
+            try {
+                const { stdout } = await this.limaWithCapture('list', '--json');
+                const lines = stdout.split(/\r?\n/).filter(x => x.trim());
+                const entries = lines.map(line => JSON.parse(line) as LimaListResult);
 
-        return entries.find(entry => entry.name === MACHINE_NAME);
-      } catch (ex) {
-        console.error('Could not parse lima status, assuming machine is unavailable.');
+                return entries.find(entry => entry.name === MACHINE_NAME);
+            } catch (ex) {
+                console.error('Could not parse lima status, assuming machine is unavailable.');
 
-        return undefined;
-      }
-    })();
-  }
+                return undefined;
+            }
+        })();
+    }
+
+    spawn(...command: string[]): childProcess.ChildProcess;
+    spawn(options: execOptions, ...command: string[]): childProcess.ChildProcess;
+    spawn(optionsOrCommand: string | execOptions, ...command: string[]): ChildProcess {
+        let options: execOptions = {};
+        const args = command.concat();
+
+        if (typeof optionsOrCommand === 'string') {
+            args.unshift(optionsOrCommand);
+        } else {
+            options = optionsOrCommand;
+        }
+
+        return this.limaSpawn(options, args);
+    }
+
 
 
     async stop(): Promise<void> {
