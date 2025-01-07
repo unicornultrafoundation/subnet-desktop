@@ -1,4 +1,3 @@
-
 import * as childProcess from '../utils/childProcess';
 import stream from 'stream';
 import { Settings } from '../config/settings'
@@ -188,6 +187,17 @@ export interface VMBackend extends EventEmitter<BackendEvents> {
     noModalDialogs: boolean;
 
     readonly executor: VMExecutor;
+
+    /**
+     * Read the subnet configuration from /root/.subnet-node/config.yaml
+     */
+    getSubnetConfig(): Promise<any>;
+
+    /**
+     * Update the subnet configuration in /root/.subnet-node/config.yaml
+     * @param newConfig The new configuration to be merged and written.
+     */
+    updateSubnetConfig(newConfig: any): Promise<void>;
 }
 
 

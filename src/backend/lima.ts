@@ -1330,4 +1330,25 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
     copyFileOut(vmPath: string, hostPath: string): Promise<void> {
         return this.lima('copy', `${MACHINE_NAME}:${vmPath}`, hostPath);
     }
+
+    /**
+     * Read the subnet configuration from /root/.subnet-node/config.yaml
+     */
+    async getSubnetConfig(): Promise<any> {
+        const configPath = '/root/.subnet-node/config.yaml';
+        const configContent = await this.readFile(configPath);
+        return yaml.parse(configContent);
+    }
+
+    /**
+     * Update the subnet configuration in /root/.subnet-node/config.yaml
+     * @param newConfig The new configuration to be merged and written.
+     */
+    async updateSubnetConfig(newConfig: any): Promise<void> {
+        const configPath = '/root/.subnet-node/config.yaml';
+        const existingConfig = await this.getSubnetConfig();
+        const mergedConfig = merge({}, existingConfig, newConfig);
+        const configContent = yaml.stringify(mergedConfig);
+        await this.writeFile(configPath, configContent);
+    }
 }
