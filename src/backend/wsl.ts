@@ -105,6 +105,12 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         });
 
     }
+    getSubnetConfig(): Promise<any> {
+        throw new Error('Method not implemented.');
+    }
+    updateSubnetConfig(newConfig: any): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
     get backend(): 'wsl' {
         return 'wsl';
     }
