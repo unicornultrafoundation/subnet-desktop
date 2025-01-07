@@ -81,7 +81,7 @@ export const defaultSettings = {
       enabled:  false,
       patterns: [] as Array<string>,
     },
-    name: ContainerEngine.MOBY,
+    name: ContainerEngine.CONTAINERD,
   },
   virtualMachine: {
     memoryInGB: 2,

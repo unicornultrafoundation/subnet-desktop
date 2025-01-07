@@ -23,7 +23,7 @@ import { NerdctlClient } from "./containerClient/nerdctlClient";
 import stream from 'stream';
 import tar from 'tar-stream';
 import NETWORKS_CONFIG from '../assets/networks-config.yaml';
-
+import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
 
 export const MACHINE_NAME = '0';
 const console = Logging.lima;
@@ -225,7 +225,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         return super.eventNames() as (keyof BackendEvents)[];
     }
     /** Helper object to manage progress notifications. */
-    progressTracker;
+    progressTracker: ProgressTracker;
 
     arch: Architecture
 
@@ -742,6 +742,8 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                         await this.convertToRaw(diffdisk);
                     }
                 }
+
+
                 // Start the VM; if it's already running, this does nothing.
                 await this.startVM();
 
@@ -765,12 +767,6 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                     // User aborted before we finished
                     return;
                 }
-
-
-                await Promise.all([
-                    this.progressTracker.action('Installing CA certificates', 50, this.installCACerts()),
-                ]);
-
                 switch (config.containerEngine.name) {
                     case ContainerEngine.CONTAINERD:
                         await this.startService('containerd');
@@ -802,7 +798,10 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
                 await this.#containerEngineClient?.waitForReady();
 
-                await this.setState(config.kubernetes.enabled ? State.STARTED : State.DISABLED);
+                await this.progressTracker.action('Installing Subnet', 100, this.installSubnet());
+                await this.progressTracker.action("Starting Subnet", 100, this.startService('subnet'))
+
+                await this.setState(State.DISABLED);
             } catch (err) {
                 console.error('Error starting lima:', err);
                 await this.setState(State.ERROR);
@@ -818,6 +817,13 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         });
 
 
+    }
+
+    protected async installSubnet() {
+        const subnetPath = path.join(paths.resources, 'linux', 'internal', 'subnet');
+        await this.lima('copy', subnetPath, `${MACHINE_NAME}:./subnet`);
+        await this.execCommand({ root: true }, 'mv', './subnet', '/usr/local/bin/subnet');
+        await this.writeFile("/etc/init.d/subnet",SERVICE_SUBNET, 0o755)
     }
 
     /**
@@ -1293,7 +1299,6 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
     async writeFile(filePath: string, fileContents: string, permissions: fs.Mode = 0o644) {
         const workdir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `rd-${path.basename(filePath)}-`));
         const tempPath = `/tmp/${path.basename(workdir)}.${path.basename(filePath)}`;
-
         try {
             const scriptPath = path.join(workdir, path.basename(filePath));
 

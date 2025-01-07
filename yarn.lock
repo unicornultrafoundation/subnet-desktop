@@ -1684,6 +1684,15 @@
     estree-walker "^2.0.2"
     picomatch "^2.3.1"
 
+"@rollup/pluginutils@>=4.1.0":
+  version "5.1.4"
+  resolved "https://registry.yarnpkg.com/@rollup/pluginutils/-/pluginutils-5.1.4.tgz#bb94f1f9eaaac944da237767cdfee6c5b2262d4a"
+  integrity sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==
+  dependencies:
+    "@types/estree" "^1.0.0"
+    estree-walker "^2.0.2"
+    picomatch "^4.0.2"
+
 "@rollup/rollup-android-arm-eabi@4.29.1":
   version "4.29.1"
   resolved "https://registry.yarnpkg.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.29.1.tgz#9bd38df6a29afb7f0336d988bc8112af0c8816c0"
@@ -6843,6 +6852,11 @@ picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
 
+picomatch@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-4.0.2.tgz#77c742931e8f3b8820946c76cd0c1f13730d1dab"
+  integrity sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==
+
 pify@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/pify/-/pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c"
@@ -8363,6 +8377,13 @@ viem@2.x, viem@^2.1.1, viem@^2.21.55:
     ox "0.4.4"
     webauthn-p256 "0.0.10"
     ws "8.18.0"
+
+vite-plugin-string@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/vite-plugin-string/-/vite-plugin-string-1.2.3.tgz#5dbc574131d5d49e5afafabe7d4a8e9c02ba8210"
+  integrity sha512-zw2jL0c4B6CAvxO8PshX04494jTcqJjNH2kW1AugBH+fImRY0evdNtVgmeS1i1VFdua/OFhL7fMqIPh0uF21/Q==
+  dependencies:
+    "@rollup/pluginutils" ">=4.1.0"
 
 vite@^5.3.1:
   version "5.4.11"

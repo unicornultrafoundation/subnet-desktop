@@ -14,6 +14,11 @@ let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked:
 function newVmManager() {
   const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
   const mgr = VmFactory(arch);
+
+  mgr.on('progress', () => {
+    globalThis.console.log(1, mgr.progress)
+  });
+
   return mgr;
 }
 
@@ -101,6 +106,7 @@ app.whenReady().then(async () => {
   }
 
   await startBackend();
+
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
