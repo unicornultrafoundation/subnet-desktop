@@ -41,6 +41,7 @@ export type DependencyVersions = {
   WSLDistro: string;
   socketVMNet: string;
   wix: string;
+  subnet: string
 };
 
 /**

@@ -16,7 +16,7 @@ function newVmManager() {
   const mgr = VmFactory(arch);
 
   mgr.on('progress', () => {
-    globalThis.console.log(1, mgr.progress)
+    globalThis.console.log(mgr.progress)
   });
 
   return mgr;

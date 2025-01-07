@@ -11,6 +11,7 @@ import { WSLDistro } from './dependencies/wsl';
 import { Wix } from './dependencies/wix';
 import { WSLDistroImage } from './dependencies/tar-archives';
 import { SudoPrompt } from './dependencies/sudo-prompt';
+import { Subnet } from './dependencies/subnet';
 
 type DependencyWithContext = {
   dependency: Dependency;
@@ -53,6 +54,7 @@ const wslDependencies: Dependency[] = [
 
 // Dependencies that are specific to WSL and Lima VMs.
 const vmDependencies: Dependency[] = [
+  new Subnet(),
 ];
 
 // Dependencies that are specific to hosts.
