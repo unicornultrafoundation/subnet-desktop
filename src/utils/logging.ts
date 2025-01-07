@@ -192,8 +192,8 @@ export default new Proxy<Module>({}, {
 
 /**
  * Delete any existing log files from the logging directory, with the exception
- * of those that are already in use by Rancher Desktop. Should only be run once
- * we are certain that this is the only instance of Rancher Desktop running on
+ * of those that are already in use by Subnet Desktop. Should only be run once
+ * we are certain that this is the only instance of Subnet Desktop running on
  * the system, so that logs from another instance are not deleted.
  */
 export function clearLoggingDirectory(): void {

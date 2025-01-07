@@ -6,7 +6,7 @@ import {
   DependencyPlatform, DependencyVersions, readDependencyVersions, DownloadContext, Dependency,
 } from './lib/dependencies';
 import { simpleSpawn } from './simple_process';
-import { AlpineLimaISO, Lima, SocketVMNet } from './dependencies/lima';
+import { AlpineLimaISO, Lima, Qemu, SocketVMNet } from './dependencies/lima';
 import { WSLDistro } from './dependencies/wsl';
 import { Wix } from './dependencies/wix';
 import { WSLDistroImage } from './dependencies/tar-archives';
@@ -30,6 +30,7 @@ const userTouchedDependencies: Dependency[] = [
 // Dependencies that are specific to unix hosts.
 const unixDependencies: Dependency[] = [
   new Lima(),
+  new Qemu(),
   new AlpineLimaISO(),
 ];
 
@@ -137,7 +138,7 @@ async function downloadDependencies(items: DependencyWithContext[]): Promise<voi
 
 async function runScripts(): Promise<void> {
   // load desired versions of dependencies
-  const depVersions = await readDependencyVersions(path.join('resources','dependencies.yaml'));
+  const depVersions = await readDependencyVersions(path.join('src', 'assets', 'dependencies.yaml'));
   const platform = os.platform();
   const dependencies: DependencyWithContext[] = [];
 

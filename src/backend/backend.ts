@@ -110,7 +110,7 @@ export interface BackendEvents {
 
 /**
  * VMBackend describes a controller for managing a virtual machine upon which
- * Rancher Desktop runs.
+ * subnet Desktop runs.
  */
 export interface VMBackend extends EventEmitter<BackendEvents> {
     /** The name of the VM backend */

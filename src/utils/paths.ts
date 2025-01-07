@@ -1,7 +1,6 @@
 /**
  * This module describes the various paths we use to store state & data.
  */
-import fs from 'fs';
 import os from 'os';
 import path from 'path';
 

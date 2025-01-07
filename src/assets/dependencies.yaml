@@ -1,4 +1,5 @@
 lima: 1.0.2.rd1
+qemu: 9.2.0.rd1
 WSLDistro: "0.76"
 wix: v3.14.1
 socketVMNet: 1.2.1

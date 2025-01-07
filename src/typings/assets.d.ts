@@ -3,7 +3,7 @@ declare module '*.yaml' {
     export default content;
   }
   
-  declare module '@pkg/assets/scripts/*' {
+  declare module 'src/assets/scripts/*' {
     const content: string;
     export default content;
   }

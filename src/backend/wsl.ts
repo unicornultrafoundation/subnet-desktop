@@ -78,7 +78,7 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
     }
 
     /**
-     * Windows-side process for the Rancher Desktop Networking,
+     * Windows-side process for the subnet Desktop Networking,
      * it is used to provide DNS, DHCP and Port Forwarding
      * to the vm-switch that is running in the WSL VM.
      */
@@ -185,7 +185,7 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
                 key = reg.openKey(reg.HKLM, 'SOFTWARE', reg.Access.READ);
 
                 if (key) {
-                    const parsedValue = reg.getValue(key, 'SUSE\\RancherDesktop', 'AdminInstall');
+                    const parsedValue = reg.getValue(key, 'SUSE\\SubnetDesktop', 'AdminInstall');
                     const isAdmin = parsedValue !== null;
 
                     return resolve(isAdmin);
