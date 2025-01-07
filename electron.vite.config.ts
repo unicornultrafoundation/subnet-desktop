@@ -19,6 +19,9 @@ export default defineConfig({
         "@pkg": resolve("src/*")
       }
     },
-    plugins: [react()]
+    plugins: [react()],
+    server: {
+      host: true
+    }
   }
 })

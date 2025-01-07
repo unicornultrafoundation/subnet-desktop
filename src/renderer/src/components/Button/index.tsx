@@ -33,7 +33,7 @@ export default function Button({
   return (
     <button
       disabled={disabled}
-      className={`rounded-[8px] px-[12px] py-[10px] text-white ${className} flex items-center justify-center gap-4 ${_className} ${fill && "w-full"}`}
+      className={`rounded-[8px] px-[12px] py-[10px] text-white ${className} flex items-center justify-center gap-4 ${_className} ${fill && "w-full"} disabled:opacity-50 disabled:pointer-events-none`}
       onClick={onClick}
     >
       {isProcessing && (

@@ -54,7 +54,8 @@ createWeb3Modal({
     icons: ["https://avatars.githubusercontent.com/u/37784886"],
   },
   wagmiConfig: wagmiConfig,
-  projectId: import.meta.env.VITE_WC_PROJECT_ID,
+  // projectId: import.meta.env.VITE_WC_PROJECT_ID,
+  projectId: 'f6969fb129c0b74c32a8767fd8b9dfac',
   enableAnalytics: true, // Optional - defaults to your Cloud configuration
 });
 

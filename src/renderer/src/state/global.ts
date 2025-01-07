@@ -1,13 +1,19 @@
 import { create } from "zustand";
 
 interface GlobalState {
-  searchQuery: string;
-  setSearchQuery: (searchQuery: string) => void;
+  installStep: string;
+  setInstallStep: (installStep: string) => void;
+  installProgress: string;
+  setInstallProgress: (installProgress: string) => void;
 }
 
 export const useGlobalStore = create<GlobalState>()((set) => ({
-  searchQuery: "",
-  setSearchQuery: (searchQuery) => {
-    set({ searchQuery });
+  installStep: "introduction",
+  setInstallStep: (installStep) => {
+    set({ installStep });
   },
+  installProgress: "",
+  setInstallProgress: (installProgress) => {
+    set({ installProgress })
+  }
 }));
