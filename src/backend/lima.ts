@@ -1032,7 +1032,6 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         // If we're in the middle of starting, also ignore the call to stop (from
         // the process terminating), as we do not want to shut down the VM in that
         // case.
-
         if (this.currentAction !== Action.NONE) {
             return;
         }
@@ -1046,6 +1045,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
                 if (status && status.status === 'Running') {
                     await this.execCommand({ root: true }, '/sbin/rc-service', '--ifstarted', 'containerd', 'stop');
+                    await this.execCommand({ root: true }, '/sbin/rc-service', '--ifstarted', 'subnet', 'stop');
                     await this.execCommand({ root: true }, '/sbin/fstrim', '/mnt/data');
                     await this.lima('stop', MACHINE_NAME);
                 }
