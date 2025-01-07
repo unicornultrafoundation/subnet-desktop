@@ -1,4 +1,4 @@
-declare module '@pkg/assets/*.yaml' {
+declare module '*.yaml' {
     const content: any;
     export default content;
   }

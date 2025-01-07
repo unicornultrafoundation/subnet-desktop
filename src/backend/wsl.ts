@@ -10,8 +10,8 @@ import fs from 'fs';
 import util from 'util';
 import * as reg from 'native-reg';
 import os from 'os';
-import DEPENDENCY_VERSIONS from '@pkg/assets/dependencies.yaml';
-import { defined, RecursivePartial } from '@pkg/utils/typeUtils';
+import DEPENDENCY_VERSIONS from '../assets/dependencies.yaml';
+import { defined, RecursivePartial } from '../utils/typeUtils';
 import _ from 'lodash';
 
 

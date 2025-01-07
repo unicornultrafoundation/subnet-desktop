@@ -2,8 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import VmFactory from '@pkg/backend/factory';
-import util from 'util';
+import VmFactory from '../backend/factory';
 
 
 function newVmManager() {
