@@ -1,15 +1,50 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import os from 'os';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import {installCNIPlugins, installContainerd, isInstalled, startContainerd, startSubnetNode, stopContainerd, stopSubnetNode} from './deamon/deamon'
+import VmFactory from '../backend/factory';
+import * as settings from '../config/settings';
+import * as settingsImpl from '../config/settingsImpl';
 
-let mainWindow: BrowserWindow
+let cfg: settings.Settings;
+let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} };
+
+
+
+function newVmManager() {
+  const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
+  const mgr = VmFactory(arch);
+
+  mgr.on('progress', () => {
+    globalThis.console.log(mgr.progress)
+  });
+
+  return mgr;
+}
+
+const vmmanager = newVmManager();
+
+async function startBackend() {
+  try {
+    await startVmManager();
+  } catch (err) {
+    handleFailure(err);
+  }
+}
+
+
+async function startVmManager() {
+  await vmmanager.start(cfg);
+}
+
+async function handleFailure(payload: any) {
+  console.log(payload)
+}
+
 
 function createWindow(): void {
   // Create the browser window.
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -53,87 +88,35 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC command
-  // ipcMain.on('ping', () => console.log('pong'))
-  ipcMain.on('install', async () => {
-    // Install containerd if not installed
-    if (!await isInstalled('containerd --version')) {
-      await installContainerd(mainWindow);
-    }
+  // IPC test
+  ipcMain.on('ping', () => console.log('pong'))
 
-    // Install CNI plugins if not installed
-    if (os.platform() === 'win32') {
-      if (!await isInstalled('test -d /opt/cni/bin')) {
-        await installCNIPlugins(mainWindow);
-      }
-    } else {
-      if (!await isInstalled('ls /opt/cni/bin')) {
-        await installCNIPlugins(mainWindow);
-      }
-    }
-
-    // Start containerd and then start subnet node
-    // await startContainerd();
-    // await startSubnetNode();
-  })
-  ipcMain.on('startSubnetNode', async () => {
-    await startContainerd();
-    await startSubnetNode()
-  })
-  ipcMain.on('stopSubnetNode', async () => {
-    await stopContainerd();
-    stopSubnetNode()
-  })
-  ipcMain.on('requestInstallStatus', async () => {
-    const installed = await isInstalled('containerd --version')
-    mainWindow.webContents.send('install-status', installed);
-  })
-
-  createWindow()
+  //createWindow()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  try {
+    cfg = settingsImpl.load(deploymentProfiles);
+  } catch(err) {
+    console.error(err)
+  }
+
+  await startBackend();
+
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', async () => {
+app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    stopSubnetNode();
-    await stopContainerd();
     app.quit()
-  } else {
-    stopSubnetNode();
-    await stopContainerd();
-    // TODO: stop lima
-    // stopLima();
-    app.quit();
   }
 })
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-// Handle app restart
-// app.on('restart', async function () {
-//   await restartAll();
-// });
-
-// // Handle app start
-// app.on('start', async function () {
-//   await startContainerd();
-//   await startSubnetNode();
-// });
-
-// // Handle app stop
-app.on('before-quit', async function () {
-  stopSubnetNode();
-  await stopContainerd();
-  if (os.platform() === 'darwin') {
-    // TODO: stop lima
-    // stopLima();
-  }
-});
