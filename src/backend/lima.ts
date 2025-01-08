@@ -24,6 +24,7 @@ import stream from 'stream';
 import tar from 'tar-stream';
 import NETWORKS_CONFIG from '../assets/networks-config.yaml';
 import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
+import { app } from 'electron'
 
 export const MACHINE_NAME = '0';
 const console = Logging.lima;
@@ -960,7 +961,8 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         if (os.platform().startsWith('darwin')) {
             // Since we now use native Electron, the only case this might be an issue
             // is the user is running under Rosetta. Flag that.
-            if (Electron.app.runningUnderARM64Translation) {
+            console.log('app.runningUnderARM64Translation', app.runningUnderARM64Translation)
+            if (app.runningUnderARM64Translation) {
                 // Using 'aarch64' and 'x86_64' in the error because that's what we use
                 // for the DMG suffix, e.g. "subnet Desktop.aarch64.dmg"
                 throw new BackendError('Fatal Error', `subnet Desktop for x86_64 does not work on aarch64.`, true);
