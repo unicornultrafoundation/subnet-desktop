@@ -12,11 +12,7 @@ export class WSLDistroImage implements Dependency {
   dependencies(_: DownloadContext): string[] {
     return [
       'WSLDistro:win32',
-      'guestagent:linux',
-      'vm-switch:linux',
-      'network-setup:linux',
-      'wsl-proxy:linux',
-      'trivy:linux',
+      'subnet:linux',
     ];
   }
 
@@ -55,11 +51,7 @@ export class WSLDistroImage implements Dependency {
 
     // Add extra files.
     const extraFiles = {
-      'linux/staging/guestagent':    'usr/local/bin/rancher-desktop-guestagent',
-      'linux/staging/vm-switch':     'usr/local/bin/vm-switch',
-      'linux/staging/network-setup': 'usr/local/bin/network-setup',
-      'linux/staging/wsl-proxy':     'usr/local/bin/wsl-proxy',
-      'linux/staging/trivy':         'usr/local/bin/trivy',
+      'linux/internal/subnet':         'usr/local/bin/subnet',
     };
 
     await Promise.all(Object.entries(extraFiles).map(([src, dest]) => {
