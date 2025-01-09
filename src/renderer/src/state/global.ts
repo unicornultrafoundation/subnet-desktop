@@ -5,6 +5,8 @@ interface GlobalState {
   setInstallStep: (installStep: string) => void;
   installProgress: string;
   setInstallProgress: (installProgress: string) => void;
+  alreadySetup: boolean;
+  setAlreadySetup: (alreadySetup: boolean) => void;
 }
 
 export const useGlobalStore = create<GlobalState>()((set) => ({
@@ -15,5 +17,7 @@ export const useGlobalStore = create<GlobalState>()((set) => ({
   installProgress: "",
   setInstallProgress: (installProgress) => {
     set({ installProgress })
-  }
+  },
+  alreadySetup: false,
+  setAlreadySetup: (alreadySetup: boolean) => set({ alreadySetup }),
 }));
