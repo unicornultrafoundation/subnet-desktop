@@ -8,7 +8,6 @@ import * as settingsImpl from '../config/settingsImpl';
 
 let cfg: settings.Settings;
 let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} };
-let gone = false; // when true indicates app is shutting down
 
 
 

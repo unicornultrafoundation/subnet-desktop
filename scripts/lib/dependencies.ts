@@ -25,6 +25,8 @@ export type DownloadContext = {
   internalDir: string;
   // dockerPluginsDir is for docker CLI plugins.
   dockerPluginsDir: string;
+
+  goPlatform: string
 };
 
 export type AlpineLimaISOVersion = {

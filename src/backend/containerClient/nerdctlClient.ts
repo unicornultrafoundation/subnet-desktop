@@ -22,7 +22,6 @@ export class NerdctlClient implements ContainerEngineClient {
         // We need to check two things: containerd, and buildkitd.
         const commandsToCheck = [
             ['/usr/local/bin/nerdctl', 'system', 'info'],
-            ['/usr/local/bin/buildctl', 'debug', 'info'],
         ];
 
         for (const cmd of commandsToCheck) {

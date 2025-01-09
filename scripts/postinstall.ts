@@ -12,6 +12,7 @@ import { Wix } from './dependencies/wix';
 import { WSLDistroImage } from './dependencies/tar-archives';
 import { SudoPrompt } from './dependencies/sudo-prompt';
 import { Subnet } from './dependencies/subnet';
+import * as goUtils from './dependencies/go-source';
 
 type DependencyWithContext = {
   dependency: Dependency;
@@ -46,10 +47,15 @@ const windowsDependencies: Dependency[] = [
   new WSLDistro(),
   new WSLDistroImage(),
   new Wix(),
+  new goUtils.GoDependency('networking/cmd/host', 'internal/host-switch'),
+
 ];
 
 // Dependencies that are specific to WSL.
 const wslDependencies: Dependency[] = [
+  new goUtils.GoDependency('networking/cmd/vm', 'staging/vm-switch'),
+  new goUtils.GoDependency('networking/cmd/network', 'staging/network-setup'),
+  new goUtils.GoDependency('networking/cmd/proxy', 'staging/wsl-proxy'),
 ];
 
 // Dependencies that are specific to WSL and Lima VMs.
@@ -194,6 +200,7 @@ async function buildDownloadContextFor(rawPlatform: DependencyPlatform, depVersi
     binDir:             path.join(resourcesDir, platform, 'bin'),
     internalDir:        path.join(resourcesDir, platform, 'internal'),
     dockerPluginsDir:   path.join(resourcesDir, platform, 'docker-cli-plugins'),
+    goPlatform:         platform === 'win32' ? 'windows' : platform,
   };
 
   const dirsToCreate = ['binDir', 'internalDir', 'dockerPluginsDir'] as const;
