@@ -8,9 +8,9 @@ import * as settingsImpl from '../config/settingsImpl';
 
 let cfg: settings.Settings;
 let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} };
-let gone = false; // when true indicates app is shutting down
+// let gone = false; // when true indicates app is shutting down
 
-
+let mainWindow: BrowserWindow
 
 function newVmManager() {
   const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
@@ -18,6 +18,8 @@ function newVmManager() {
 
   mgr.on('progress', () => {
     globalThis.console.log(mgr.progress)
+    if (!mainWindow) return
+    mainWindow.webContents.send('install-progress', mgr.progress)
   });
 
   return mgr;
@@ -45,7 +47,7 @@ async function handleFailure(payload: any) {
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
