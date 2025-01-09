@@ -1,7 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import HomePage from './pages/Home'
 import ToastProvider from './components/ToastProvider'
-import { useAuthStore } from './state/auth'
 import { ReactNode, useEffect } from 'react'
 import SetupPage from './pages/SetupPage'
 import { useGlobalStore } from './state/global'
@@ -14,7 +13,7 @@ const router = createBrowserRouter([
 ])
 
 function App(): ReactNode {
-  const { alreadySetup, setAlreadySetup } = useAuthStore()
+  const { alreadySetup, setAlreadySetup } = useGlobalStore()
   const { setInstallProgress } = useGlobalStore()
 
   useEffect(() => {

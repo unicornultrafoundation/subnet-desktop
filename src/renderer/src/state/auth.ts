@@ -8,8 +8,6 @@ interface AuthState {
   setPassword: (password: string) => void;
   port: string;
   setPort: (port: string) => void;
-  alreadySetup: boolean;
-  setAlreadySetup: (alreadySetup: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,9 +18,7 @@ export const useAuthStore = create<AuthState>()(
       password: "",
       setPassword: (password: string) => set({ password }),
       port: "",
-      setPort: (port: string) => set({ port }),
-      alreadySetup: false,
-      setAlreadySetup: (alreadySetup: boolean) => set({ alreadySetup }),
+      setPort: (port: string) => set({ port })
     }),
     {
       name: "config-storage",

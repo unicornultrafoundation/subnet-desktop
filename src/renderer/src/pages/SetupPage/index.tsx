@@ -9,7 +9,6 @@ import IFailed from '@/assets/images/i-failed.png';
 import Button from "@renderer/components/Button";
 import SetupNode from "./SetupNode";
 import Installation from "./Installation";
-import { useAuthStore } from "@renderer/state/auth";
 import { useGlobalStore } from "@renderer/state/global";
 
 export type SetupStep = {
@@ -26,8 +25,7 @@ const initialSteps: SetupStep[] = [
 ]
 
 export default function SetupPage() {
-  const { setAlreadySetup } = useAuthStore();
-  const { installProgress } = useGlobalStore()
+  const { installProgress, setAlreadySetup } = useGlobalStore()
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps,] = useState<SetupStep[]>(initialSteps);

@@ -39,7 +39,7 @@ const unixDependencies: Dependency[] = [
 // Dependencies that are specific to macOS hosts.
 const macOSDependencies: Dependency[] = [
   new SocketVMNet(),
-  new SudoPrompt(),
+  // new SudoPrompt(),
 ];
 
 // Dependencies that are specific to windows hosts.
