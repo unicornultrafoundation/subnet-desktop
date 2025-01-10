@@ -24,7 +24,7 @@ function App(): ReactNode {
 
     window.electron.ipcRenderer.on('install-progress', (_, value) => {
       console.log('install-progress', value)
-      setInstallProgress(value)
+      value.description && setInstallProgress(value.description)
     })
   }, [])
 
