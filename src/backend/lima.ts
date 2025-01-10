@@ -766,6 +766,11 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                     });
                 }
 
+                if (this.currentAction !== Action.STARTING) {
+                    // User aborted before we finished
+                    return;
+                }
+                
                 await this.startService('containerd');
                 try {
                     await this.execCommand({
