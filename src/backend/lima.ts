@@ -801,6 +801,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
                 await this.progressTracker.action('Installing Subnet', 100, this.installSubnet());
                 await this.progressTracker.action("Starting Subnet", 100, this.startService('subnet'))
+                await this.progressTracker.action("Update Subnet", 100, this.updateSubnetConfig({provider: {enable: true}}))
 
                 await this.setState(State.DISABLED);
             } catch (err) {
@@ -1352,5 +1353,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         const mergedConfig = merge({}, existingConfig, newConfig);
         const configContent = yaml.stringify(mergedConfig);
         await this.writeFile(configPath, configContent);
+        await this.execCommand("/sbin/rc-service", "subnet", "restart");
+
     }
 }

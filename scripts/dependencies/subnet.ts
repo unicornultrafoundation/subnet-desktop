@@ -1,4 +1,4 @@
-import { Dependency, DownloadContext, findChecksum, getPublishedVersions } from "../lib/dependencies";
+import { Dependency, DownloadContext, getPublishedVersions } from "../lib/dependencies";
 import { download } from "../lib/download";
 import semver from 'semver';
 import path from 'path';
