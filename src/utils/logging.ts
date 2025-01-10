@@ -80,7 +80,6 @@ export class Log {
       this.stream.on('open', resolve);
     });
     delete this._fdStream;
-    globalThis.console?.log(import.meta.env);
     // If we're running unit tests, output to the console rather than file.
     // However, _don't_ do so for end-to-end tests in Playwright.
     // We detect Playwright via an environment variable we set in scripts/e2e.ts
