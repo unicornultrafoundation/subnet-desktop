@@ -1338,7 +1338,7 @@ generateResolvConf = true
             this.execCommand.bind(this),
             newConfig
         );
-        await this.execCommand('/sbin/rc-service', 'subnet', 'restart');
+        await this.execCommand({root: true}, '/sbin/rc-service', 'subnet', 'restart');
         const isOnline = await checkStatusUtil();
         console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`);
     }
