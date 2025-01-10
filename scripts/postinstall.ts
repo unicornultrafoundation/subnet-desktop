@@ -10,7 +10,6 @@ import { AlpineLimaISO, Lima, Qemu, SocketVMNet } from './dependencies/lima';
 import { WSLDistro } from './dependencies/wsl';
 import { Wix } from './dependencies/wix';
 import { WSLDistroImage } from './dependencies/tar-archives';
-import { SudoPrompt } from './dependencies/sudo-prompt';
 import { Subnet } from './dependencies/subnet';
 import * as goUtils from './dependencies/go-source';
 

@@ -39,40 +39,40 @@ export class NerdctlClient implements ContainerEngineClient {
 
     readFile(imageID: string, filePath: string): Promise<string>;
     readFile(imageID: string, filePath: string, options: { encoding?: BufferEncoding; namespace?: string; }): Promise<string>;
-    readFile(imageID: unknown, filePath: unknown, options?: unknown): Promise<string> {
+    readFile(_imageID: unknown, _filePath: unknown, _options?: unknown): Promise<string> {
         throw new Error("Method not implemented.");
     }
     copyFile(imageID: string, sourcePath: string, destinationDir: string): Promise<void>;
     copyFile(imageID: string, sourcePath: string, destinationDir: string, options: { namespace?: string; }): Promise<void>;
-    copyFile(imageID: unknown, sourcePath: unknown, destinationDir: unknown, options?: unknown): Promise<void> {
+    copyFile(_imageID: unknown, _sourcePath: unknown, _destinationDir: unknown, _options?: unknown): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getTags(imageName: string, options?: ContainerBasicOptions): Promise<Set<string>> {
+    getTags(_imageName: string, _options?: ContainerBasicOptions): Promise<Set<string>> {
         throw new Error("Method not implemented.");
     }
-    run(imageID: string, options?: ContainerRunOptions): Promise<string> {
+    run(_imageID: string, _options?: ContainerRunOptions): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    stop(container: string, options?: ContainerStopOptions): Promise<void> {
+    stop(_container: string, _options?: ContainerStopOptions): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    composeUp(options: ContainerComposeOptions): Promise<void> {
+    composeUp(_options: ContainerComposeOptions): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    composeDown(options?: ContainerComposeOptions): Promise<void> {
+    composeDown(_options?: ContainerComposeOptions): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    composeExec(options: ContainerComposeExecOptions): Promise<ReadableProcess> {
+    composeExec(_options: ContainerComposeExecOptions): Promise<ReadableProcess> {
         throw new Error("Method not implemented.");
     }
-    composePort(options: ContainerComposePortOptions): Promise<string> {
+    composePort(_options: ContainerComposePortOptions): Promise<string> {
         throw new Error("Method not implemented.");
     }
     runClient(args: string[], stdio?: "ignore", options?: ContainerRunClientOptions): Promise<Record<string, never>>;
     runClient(args: string[], stdio: Log, options?: ContainerRunClientOptions): Promise<Record<string, never>>;
     runClient(args: string[], stdio: "pipe", options?: ContainerRunClientOptions): Promise<{ stdout: string; stderr: string; }>;
     runClient(args: string[], stdio: "stream", options?: ContainerRunClientOptions): ReadableProcess;
-    runClient(args: unknown, stdio?: unknown, options?: unknown): Promise<Record<string, never>> | import("./types").ReadableProcess | Promise<{ stdout: string; stderr: string; }> {
+    runClient(_args: unknown, _stdio?: unknown, _options?: unknown): Promise<Record<string, never>> | import("./types").ReadableProcess | Promise<{ stdout: string; stderr: string; }> {
         throw new Error("Method not implemented.");
     }
 
