@@ -24,8 +24,8 @@ function newVmManager() {
   const mgr = VmFactory(arch);
 
   mgr.on('progress', () => {
-    globalThis.console.log(mgr.progress)
-    if (!mainWindow) return
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    console.log('progress:', mgr.progress)
     mainWindow.webContents.send('install-progress', mgr.progress)
   });
 
@@ -126,10 +126,11 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', async () => {
   try {
-    await vmmanager.stop()
-  } catch {
+    await vmmanager.stop();
+  } catch (err) {
+    console.error('Error stopping vmmanager:', err);
   } finally {
-    app.quit()
+    app.quit();
   }
 });
 

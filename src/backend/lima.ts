@@ -777,7 +777,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                                 root: true,
                                 expectFailure: true,
                             },
-                                'ctr', '--address', '/run/k3s/containerd/containerd.sock', 'namespaces', 'create', 'default');
+                                'ctr', '--address', '/run/containerd/containerd.sock', 'namespaces', 'create', 'default');
                         } catch {
                             // expecting failure because the namespace may already exist
                         }
