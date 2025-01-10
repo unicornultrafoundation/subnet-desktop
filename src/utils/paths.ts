@@ -141,13 +141,21 @@ function getPaths(): Paths {
       });
       return new UnixPaths(pathsData);
     case 'win32':
+      let resourcesPath: string;
+
+      // If we are running as a script (i.e. yarn postinstall), electron.app is undefined
+      if (electron.app?.isPackaged) {
+        resourcesPath = path.join(process.resourcesPath, "app.asar.unpacked");
+      } else {
+        resourcesPath = electron.app?.getAppPath() || '';
+      }
       Object.assign(pathsData, {
         appHome: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop'),
         altAppHome: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop'),
         config: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop', 'config'),
         logs: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop', 'logs'),
         cache: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop', 'cache'),
-        resources: path.join(electron.app.getAppPath(), 'resources'),
+        resources: path.join(resourcesPath, 'resources'),
         extensionRoot: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop', 'extensions'),
         wslDistro: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop', 'wsl-distro'),
         wslDistroData: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop', 'wsl-distro-data'),

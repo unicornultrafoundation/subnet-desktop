@@ -538,6 +538,7 @@ generateResolvConf = true
                         }
                     }
                     try {
+                        await this.execCommand('/sbin/rc-service', 'subnet', 'stop');
                         await this.stopService('local');
                     } catch (ex) {
                         // Do not allow errors here to prevent us from stopping.
