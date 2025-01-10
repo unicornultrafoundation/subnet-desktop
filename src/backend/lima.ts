@@ -709,6 +709,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
     async start(config_: BackendSettings): Promise<void> {
         const config = this.cfg = clone(config_);
+
         let isDowngrade = false;
 
         await this.setState(State.STARTING);
@@ -765,25 +766,15 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                     });
                 }
 
-                if (this.currentAction !== Action.STARTING) {
-                    // User aborted before we finished
-                    return;
-                }
-                switch (config.containerEngine.name) {
-                    case ContainerEngine.CONTAINERD:
-                        await this.startService('containerd');
-                        try {
-                            await this.execCommand({
-                                root: true,
-                                expectFailure: true,
-                            },
-                                'ctr', '--address', '/run/containerd/containerd.sock', 'namespaces', 'create', 'default');
-                        } catch {
-                            // expecting failure because the namespace may already exist
-                        }
-                        break;
-                    case ContainerEngine.NONE:
-                        throw new Error('No container engine is set');
+                await this.startService('containerd');
+                try {
+                    await this.execCommand({
+                        root: true,
+                        expectFailure: true,
+                    },
+                        'ctr', '--address', '/run/containerd/containerd.sock', 'namespaces', 'create', 'default');
+                } catch {
+                    // expecting failure because the namespace may already exist
                 }
 
                 if (this.currentAction !== Action.STARTING) {
@@ -791,18 +782,12 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                     return;
                 }
 
-                switch (config.containerEngine.name) {
-                    case ContainerEngine.CONTAINERD:
-                        // await this.execCommand({ root: true }, '/sbin/rc-service', '--ifnotstarted', 'buildkitd', 'start');
-                        this.#containerEngineClient = new NerdctlClient(this);
-                        break;
-                }
-
+                this.#containerEngineClient = new NerdctlClient(this);
                 await this.#containerEngineClient?.waitForReady();
 
                 await this.progressTracker.action('Installing Subnet', 100, this.installSubnet());
                 await this.progressTracker.action("Starting Subnet", 100, this.startService('subnet'))
-                await this.progressTracker.action("Update Subnet", 100, this.updateSubnetConfig({provider: {enable: true}}))
+                await this.progressTracker.action("Update Subnet", 100, this.updateSubnetConfig({ provider: { enable: true } }))
 
                 await this.setState(State.DISABLED);
             } catch (err) {
@@ -826,7 +811,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         const subnetPath = path.join(paths.resources, 'linux', 'internal', 'subnet');
         await this.lima('copy', subnetPath, `${MACHINE_NAME}:./subnet`);
         await this.execCommand({ root: true }, 'mv', './subnet', '/usr/local/bin/subnet');
-        await this.writeFile("/etc/init.d/subnet",SERVICE_SUBNET, 0o755)
+        await this.writeFile("/etc/init.d/subnet", SERVICE_SUBNET, 0o755)
     }
 
     /**
@@ -1355,7 +1340,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
             this.execCommand.bind(this),
             newConfig
         );
-        await this.execCommand({root: true}, '/sbin/rc-service', 'subnet', 'restart');
+        await this.execCommand({ root: true }, '/sbin/rc-service', 'subnet', 'restart');
         const isOnline = await checkStatusUtil();
         console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`);
     }
