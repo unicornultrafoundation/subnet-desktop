@@ -789,7 +789,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
                 await this.progressTracker.action("Starting Subnet", 100, this.startService('subnet'))
                 await this.progressTracker.action("Update Subnet", 100, this.updateSubnetConfig({ provider: { enable: true } }))
 
-                await this.setState(State.DISABLED);
+                await this.setState(State.STARTED);
             } catch (err) {
                 console.error('Error starting lima:', err);
                 await this.setState(State.ERROR);

@@ -29,6 +29,11 @@ function newVmManager() {
     mainWindow.webContents.send('install-progress', mgr.progress)
   });
 
+  mgr.on('state-changed', (state: string) => {
+    if (!mainWindow) return
+    mainWindow.webContents.send('install-status', state)
+  });
+
   return mgr;
 }
 

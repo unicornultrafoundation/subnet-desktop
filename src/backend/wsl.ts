@@ -443,7 +443,7 @@ generateResolvConf = true
                 await this.progressTracker.action("Update Subnet Configuration", 100, this.updateSubnetConfig({provider: { enable: true}}))
 
                 
-                await this.setState(State.DISABLED);
+                await this.setState(State.STARTED);
             } catch (ex) {
                 await this.setState(State.ERROR);
                 throw ex;

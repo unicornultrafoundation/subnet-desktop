@@ -1,25 +1,23 @@
-import Button from '@renderer/components/Button'
 import { useGlobalStore } from '@renderer/state/global';
 import { useEffect, useState } from 'react';
 
 type Props = {
-  onContinue: () => void;
-  onBack: () => void;
   progress: number;
 }
 
-const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
+const Installation: React.FC<Props> = ({ progress }) => {
   const {installProgress} = useGlobalStore()
   const [steps, setSteps] = useState<string[]>([])
 
   useEffect(() => {
     if (installProgress !== '') {
+      console.log(installProgress)
       setSteps([...steps, ...[installProgress]])
     }
   }, [installProgress])
 
   return (
-    <div className="w-full flex flex-col border-t-[1px] border-neutral-900 pt-6 pb-16">
+    <div className="w-full flex flex-col pt-6 pb-16">
       <div className='w-full flex flex-col gap-6'>
         <div className='w-full bg-[#272727] h-[52px] rounded-[8px] overflow-hidden'>
           <div
@@ -38,12 +36,12 @@ const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
           </div>
         </div>
       </div>
-      <div>
+      <div className='bg-red-500 h-[40px]'>
         {steps.map((step, index) => {
           return <div key={`step-${index}`}>{step}</div>
         })}
       </div>
-      <div className='w-full flex items-center justify-between gap-6 mt-16'>
+      {/* <div className='w-full flex items-center justify-between gap-6 mt-16'>
         <Button
           type="secondary"
           className='w-1/2'
@@ -65,7 +63,7 @@ const Installation: React.FC<Props> = ({ onBack, onContinue, progress }) => {
         >
           <span className="font-semibold text-[14px]">CONTINUE</span>
         </Button>
-      </div>
+      </div> */}
     </div>
   )
 }

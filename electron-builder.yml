@@ -1,4 +1,4 @@
-appId: com.electron.app
+appId: com.u2u.subnet
 productName: subnet-desktop
 directories:
   buildResources: build
