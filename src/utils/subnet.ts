@@ -28,7 +28,7 @@ export async function updateSubnetConfig(
  * Check if a service is online by making a POST request to the API at localhost:8080/status
  * @returns A promise that resolves to a boolean indicating if the service is online
  */
-export async function checkStatus(retries = 5, delay = 1000): Promise<boolean> {
+export async function checkStatus(retries = 5, delay = 3000): Promise<boolean> {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await axios.post('http://localhost:8080/status');

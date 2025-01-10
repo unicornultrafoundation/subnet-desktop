@@ -30,7 +30,7 @@ function newVmManager() {
   });
 
   mgr.on('state-changed', (state: string) => {
-    if (!mainWindow) return
+    if (!mainWindow || mainWindow.isDestroyed()) return
     mainWindow.webContents.send('install-status', state)
   });
 
