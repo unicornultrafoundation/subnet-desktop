@@ -43,9 +43,5 @@ mount --make-shared /sys/fs/cgroup
 mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
 mount --make-shared /proc/sys/fs/binfmt_misc
 
-if [ -f /var/lib/resolv.conf ]; then
-    ln -s -f /var/lib/resolv.conf /etc/resolv.conf
-fi
-
 # Run init (which never exits).
 exec /sbin/init

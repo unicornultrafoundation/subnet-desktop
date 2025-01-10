@@ -23,6 +23,8 @@ import WSL_EXEC from '../assets/scripts/wsl-exec?raw';
 import NERDCTL from "../assets/scripts/nerdctl?raw"
 import BackgroundProcess from '../utils/backgroundProcess';
 import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
+import yaml from 'yaml';
+import { merge } from "lodash";
 
 /** Number of times to retry converting a path between WSL & Windows. */
 const WSL_PATH_CONVERT_RETRIES = 10;
@@ -248,6 +250,8 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         const PID_FILE = '/run/wsl-init.pid';
         const streamReaders: Promise<void>[] = [];
 
+
+
         await this.writeFile('/usr/local/bin/wsl-init', WSL_INIT_SCRIPT, 0o755);
 
         // The process should already be gone by this point, but make sure.
@@ -335,6 +339,19 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         });
     }
 
+    protected async writeWSLConf() {
+        const wslConfContent = `
+[automount]
+mountFsTab = false
+ldconfig = false
+options = metadata
+[network]
+generateHosts = true
+generateResolvConf = true
+`;
+        await this.writeFile('/etc/wsl.conf', wslConfContent, 0o755);
+    }
+
     async start(config_: BackendSettings): Promise<void> {
         const config = this.cfg = _.defaultsDeep(clone(config_),
             { containerEngine: { name: ContainerEngine.CONTAINERD } });
@@ -347,6 +364,7 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
                     await this.ensureDistroRegistered();
                     await this.upgradeDistroAsNeeded();
                     await this.writeHostsFile(config);
+                    await this.writeWSLConf(); // Call the new method here
                 })()];
 
                 await this.progressTracker.action('Preparing to start', 0, Promise.all(prepActions));
@@ -417,12 +435,14 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
                         this.#containerEngineClient = new NerdctlClient(this);
                         break;
                 }
-                 // Do not await on this, as we don't want to wait until the proxy exits.
+                // Do not await on this, as we don't want to wait until the proxy exits.
                 this.runWslProxy().catch(console.error);
                 await this.progressTracker.action('Waiting for container engine to be ready', 0, this.containerEngineClient.waitForReady());
                 await this.progressTracker.action('Installing Subnet', 100, this.installSubnet());
                 await this.progressTracker.action("Starting Subnet", 100, this.execCommand('/sbin/rc-service', "subnet", "start"))
+                await this.progressTracker.action("Update Subnet Configuration", 100, this.updateSubnetConfig({provider: { enable: true}}))
 
+                
                 await this.setState(State.DISABLED);
             } catch (ex) {
                 await this.setState(State.ERROR);
@@ -1297,11 +1317,26 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
         };
     }
 
-    getSubnetConfig(): Promise<any> {
-        throw new Error('Method not implemented.');
+    /**
+        * Read the subnet configuration from /root/.subnet-node/config.yaml
+        */
+    async getSubnetConfig(): Promise<any> {
+        const configPath = '/root/.subnet-node/config.yaml';
+        const configContent = await this.readFile(configPath);
+        return yaml.parse(configContent);
     }
-    updateSubnetConfig(newConfig: any): Promise<void> {
-        throw new Error('Method not implemented.');
+
+    /**
+     * Update the subnet configuration in /root/.subnet-node/config.yaml
+     * @param newConfig The new configuration to be merged and written.
+     */
+    async updateSubnetConfig(newConfig: any): Promise<void> {
+        const configPath = '/root/.subnet-node/config.yaml';
+        const existingConfig = await this.getSubnetConfig();
+        const mergedConfig = merge({}, existingConfig, newConfig);
+        const configContent = yaml.stringify(mergedConfig);
+        await this.writeFile(configPath, configContent);
+        await this.execCommand("/sbin/rc-service", "subnet", "restart");
     }
 
 

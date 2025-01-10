@@ -5,11 +5,19 @@ import icon from '../../resources/icon.png?asset'
 import VmFactory from '../backend/factory';
 import * as settings from '../config/settings';
 import * as settingsImpl from '../config/settingsImpl';
+import { setLogLevel } from '../utils/logging';
 
 let cfg: settings.Settings;
 let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} };
 
 let mainWindow: BrowserWindow
+
+// Do an early check for debugging enabled via the environment variable so that
+// we can turn on extra logging to troubleshoot startup issues.
+if (settingsImpl.runInDebugMode(true)) {
+  setLogLevel('debug');
+}
+
 
 function newVmManager() {
   const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
