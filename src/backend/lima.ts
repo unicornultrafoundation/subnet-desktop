@@ -25,6 +25,7 @@ import tar from 'tar-stream';
 import NETWORKS_CONFIG from '../assets/networks-config.yaml';
 import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
 import { app } from 'electron'
+import { updateSubnetConfig as updateSubnetConfigUtil, checkStatus as checkStatusUtil } from '../utils/subnet';
 
 export const MACHINE_NAME = '0';
 const console = Logging.lima;
@@ -1348,12 +1349,14 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
      * @param newConfig The new configuration to be merged and written.
      */
     async updateSubnetConfig(newConfig: any): Promise<void> {
-        const configPath = '/root/.subnet-node/config.yaml';
-        const existingConfig = await this.getSubnetConfig();
-        const mergedConfig = merge({}, existingConfig, newConfig);
-        const configContent = yaml.stringify(mergedConfig);
-        await this.writeFile(configPath, configContent);
-        await this.execCommand("/sbin/rc-service", "subnet", "restart");
-
+        await updateSubnetConfigUtil(
+            this.readFile.bind(this),
+            this.writeFile.bind(this),
+            this.execCommand.bind(this),
+            newConfig
+        );
+        await this.execCommand('/sbin/rc-service', 'subnet', 'restart');
+        const isOnline = await checkStatusUtil();
+        console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`);
     }
 }
