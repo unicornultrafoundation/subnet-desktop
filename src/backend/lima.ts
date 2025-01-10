@@ -793,7 +793,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
                 switch (config.containerEngine.name) {
                     case ContainerEngine.CONTAINERD:
-                        await this.execCommand({ root: true }, '/sbin/rc-service', '--ifnotstarted', 'buildkitd', 'start');
+                        // await this.execCommand({ root: true }, '/sbin/rc-service', '--ifnotstarted', 'buildkitd', 'start');
                         this.#containerEngineClient = new NerdctlClient(this);
                         break;
                 }
@@ -1355,7 +1355,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
             this.execCommand.bind(this),
             newConfig
         );
-        await this.execCommand('/sbin/rc-service', 'subnet', 'restart');
+        await this.execCommand({root: true}, '/sbin/rc-service', 'subnet', 'restart');
         const isOnline = await checkStatusUtil();
         console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`);
     }
