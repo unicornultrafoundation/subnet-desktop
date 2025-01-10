@@ -104,6 +104,14 @@ export class WindowsPaths implements Paths {
 function getPaths(): Paths {
   const pathsData = {};
 
+  let resourcesPath: string;
+  // If we are running as a script (i.e. yarn postinstall), electron.app is undefined
+  if (electron.app?.isPackaged) {
+    resourcesPath = path.join(process.resourcesPath, "app.asar.unpacked");
+  } else {
+    resourcesPath = electron.app?.getAppPath() || '';
+  }
+
   switch (process.platform) {
     case 'darwin':
       Object.assign(pathsData, {
@@ -112,8 +120,7 @@ function getPaths(): Paths {
         config: path.join(os.homedir(), 'Library', 'Preferences', 'SubnetDesktop'),
         logs: path.join(os.homedir(), 'Library', 'Logs', 'SubnetDesktop'),
         cache: path.join(os.homedir(), 'Library', 'Caches', 'SubnetDesktop'),
-        // resources: path.join(electron.app.getAppPath(), 'Contents', 'Resources'),
-        resources: path.join(electron.app.getAppPath(), 'resources'),
+        resources: path.join(resourcesPath, 'resources'),
         lima: path.join(os.homedir(), '.lima'),
         integration: path.join(os.homedir(), 'Library', 'Application Support', 'SubnetDesktop', 'integration'),
         deploymentProfileSystem: '/Library/Application Support/SubnetDesktop/deploymentProfileSystem',
@@ -141,14 +148,6 @@ function getPaths(): Paths {
       });
       return new UnixPaths(pathsData);
     case 'win32':
-      let resourcesPath: string;
-
-      // If we are running as a script (i.e. yarn postinstall), electron.app is undefined
-      if (electron.app?.isPackaged) {
-        resourcesPath = path.join(process.resourcesPath, "app.asar.unpacked");
-      } else {
-        resourcesPath = electron.app?.getAppPath() || '';
-      }
       Object.assign(pathsData, {
         appHome: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop'),
         altAppHome: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop'),
