@@ -24,7 +24,7 @@ import NERDCTL from "../assets/scripts/nerdctl?raw"
 import BackgroundProcess from '../utils/backgroundProcess';
 import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
 import yaml from 'yaml';
-import { merge } from "lodash";
+import { updateSubnetConfig as updateSubnetConfigUtil, checkStatus as checkStatusUtil } from '../utils/subnet';
 
 /** Number of times to retry converting a path between WSL & Windows. */
 const WSL_PATH_CONVERT_RETRIES = 10;
@@ -1332,12 +1332,15 @@ generateResolvConf = true
      * @param newConfig The new configuration to be merged and written.
      */
     async updateSubnetConfig(newConfig: any): Promise<void> {
-        const configPath = '/root/.subnet-node/config.yaml';
-        const existingConfig = await this.getSubnetConfig();
-        const mergedConfig = merge({}, existingConfig, newConfig);
-        const configContent = yaml.stringify(mergedConfig);
-        await this.writeFile(configPath, configContent);
-        await this.execCommand("/sbin/rc-service", "subnet", "restart");
+        await updateSubnetConfigUtil(
+            this.readFile.bind(this),
+            this.writeFile.bind(this),
+            this.execCommand.bind(this),
+            newConfig
+        );
+        await this.execCommand('/sbin/rc-service', 'subnet', 'restart');
+        const isOnline = await checkStatusUtil();
+        console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`);
     }
 
 
