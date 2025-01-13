@@ -103,8 +103,10 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // IPC handler
+  ipcMain.handle('status', async () => {
+    return vmmanager.progress.description || 'UNKNOWN'
+  })
 
   createWindow()
 

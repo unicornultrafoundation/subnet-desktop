@@ -1,7 +1,7 @@
-import { useAuthStore } from "@/state/auth";
+import { useGlobalStore } from "@renderer/state/global";
 
 export const useRequestRPC = () => {
-  const { nodeURL, token } = useAuthStore();
+  const { token } = useGlobalStore();
 
   const requestRPC = async (
     method: string,
@@ -34,7 +34,7 @@ export const useRequestRPC = () => {
       redirect: "follow",
     };
 
-    const rs = await fetch(nodeURL, requestOptions);
+    const rs = await fetch("http://localhost:8080", requestOptions);
     const rsJSON = await rs.json();
     if (rsJSON.error) {
       throw new Error(rsJSON.error.message);

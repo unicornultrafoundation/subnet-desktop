@@ -1,14 +1,14 @@
 import { NodeAuth } from "@/interface/node";
-import { useAuthStore } from "@/state/auth";
 import { useMutation } from "@tanstack/react-query";
 import { useRequestRPC } from "./useRequestRPC";
+import { useGlobalStore } from "@renderer/state/global";
 
 export const useAuth = () => {
   const { requestRPC } = useRequestRPC();
-  const { nodeURL, setToken } = useAuthStore();
+  const { setToken } = useGlobalStore();
 
   return useMutation({
-    mutationKey: ["auth", nodeURL],
+    mutationKey: ["auth"],
     mutationFn: async ({ username, password }: NodeAuth) => {
       const token = btoa(`${username}:${password}`);
 

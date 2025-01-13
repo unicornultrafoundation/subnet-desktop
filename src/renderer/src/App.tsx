@@ -4,12 +4,17 @@ import ToastProvider from './components/ToastProvider'
 import { ReactNode, useEffect } from 'react'
 import SetupPage from './pages/SetupPage'
 import { useGlobalStore } from './state/global'
+import AccountPage from './pages/AccountPage'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />
   },
+  {
+    path: '/setup',
+    element: <AccountPage />
+  }
 ])
 
 function App(): ReactNode {

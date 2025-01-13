@@ -1,16 +1,15 @@
-import { useAuthStore } from "@/state/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useRequestRPC } from "./useRequestRPC";
 
 export const useNodeStatus = () => {
   const { requestRPC } = useRequestRPC();
-  const { nodeURL } = useAuthStore();
+  // const { nodeURL } = useAuthStore();
 
   return useQuery({
-    queryKey: ["node-status", nodeURL],
+    queryKey: ["node-status"],
     queryFn: async () => {
       try {
-        if (!nodeURL) return false;
+        // if (!nodeURL) return false;
         // TODO: implement node status API
         const rs = await requestRPC("config_get");
         if (rs.api?.authorizations) return true;
