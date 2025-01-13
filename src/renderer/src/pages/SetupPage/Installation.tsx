@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 
 const Installation = () => {
   const {installProgress} = useGlobalStore()
-  const [step, setStep] = useState<string>('')
+  const [step, setStep] = useState<string>('Initializing...')
 
   useEffect(() => {
     if (installProgress !== '') {
-      console.log(installProgress)
       setStep(installProgress)
     }
   }, [installProgress])

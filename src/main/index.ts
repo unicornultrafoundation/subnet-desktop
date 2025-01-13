@@ -25,13 +25,12 @@ function newVmManager() {
 
   mgr.on('progress', () => {
     if (!mainWindow || mainWindow.isDestroyed()) return
-    console.log('progress:', mgr.progress)
     mainWindow.webContents.send('install-progress', mgr.progress)
   });
 
   mgr.on('state-changed', (state: string) => {
     if (!mainWindow || mainWindow.isDestroyed()) return
-    mainWindow.webContents.send('install-status', state)
+    mainWindow.webContents.send('subnet-status', state)
   });
 
   return mgr;
@@ -52,6 +51,10 @@ async function startVmManager() {
   await vmmanager.start(cfg);
 }
 
+async function stopVmManager() {
+  await vmmanager.stop();
+}
+
 async function handleFailure(payload: any) {
   console.log(payload)
 }
@@ -64,7 +67,8 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    // ...(process.platform === 'linux' ? { icon } : {}),
+    icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -106,6 +110,16 @@ app.whenReady().then(async () => {
   // IPC handler
   ipcMain.handle('status', async () => {
     return vmmanager.progress.description || 'UNKNOWN'
+  })
+  ipcMain.handle('stop-subnet', async () => {
+    return stopVmManager()
+  })
+  ipcMain.handle('start-subnet', async () => {
+    return startVmManager()
+  })
+  ipcMain.handle('get-config', async () => {
+    const config = await vmmanager.getSubnetConfig()
+    return JSON.parse(JSON.stringify(config))
   })
 
   createWindow()

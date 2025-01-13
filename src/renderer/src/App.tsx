@@ -18,17 +18,16 @@ const router = createBrowserRouter([
 ])
 
 function App(): ReactNode {
-  const { alreadySetup, setAlreadySetup } = useGlobalStore()
-  const { setInstallProgress } = useGlobalStore()
+  const { alreadySetup, setAlreadySetup, setNodeStatus, setInstallProgress } = useGlobalStore();
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('install-status', (_, value) => {
-      console.log('install-status', value)
+    window.electron.ipcRenderer.on('subnet-status', (_, value) => {
       setAlreadySetup(value)
+      setNodeStatus(value)
     })
 
     window.electron.ipcRenderer.on('install-progress', (_, value) => {
-      console.log('install-progress', value)
+      if (!value || !value.description) return
       value.description && setInstallProgress(value.description)
     })
   }, [])

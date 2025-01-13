@@ -4,11 +4,11 @@ import IcoPort from '@/assets/images/svg/icon-location.svg';
 import Password from '@/assets/images/password.png';
 import IcoPassword from '@/assets/images/svg/icon-password.svg';
 import NodeUsage from '@/assets/images/node-usage.png';
-import IcoChart from '@/assets/images/svg/icon-chart.svg';
+// import IcoChart from '@/assets/images/svg/icon-chart.svg';
 import Username from '@/assets/images/username.png';
 import IcoUsername from '@/assets/images/svg/icon-profile.svg';
 import IcoShow from '@/assets/images/svg/icon-show.svg';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Button from '@renderer/components/Button';
 import { useNodeStatus } from '@renderer/hooks/useNodeStatus';
 import { useNavigate } from 'react-router-dom';
@@ -16,22 +16,35 @@ import { Label } from 'flowbite-react';
 import Input from '@renderer/components/Input';
 import { useAuth } from '@renderer/hooks/useAuth';
 import { useGlobalStore } from '@renderer/state/global';
+import { useAuthStore } from '@renderer/state/auth';
+import { useNodeConfig } from '@renderer/hooks/useNodeConfig';
 
 function HomePage() {
   const [isShowPassword, setIsShowPassword] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
   const {data: haveAccount} = useNodeStatus()
-  const {token} = useGlobalStore()
+  const {data: nodeConfig} = useNodeConfig()
+
+  const {token, nodeStatus} = useGlobalStore()
+  const authStore = useAuthStore()
   const { mutate: login, status: loginStatus } = useAuth();
 
   const handleLogin = async () => {
     login({ username, password });
   };
+
+  const nodeEndpoint = useMemo(() => {
+    if (!nodeConfig || !nodeConfig.addresses || !nodeConfig.addresses.api) return ''
+    const apiEndpoint = nodeConfig.addresses.api[0]
+    if (!apiEndpoint) return ''
+
+    const [_, __, ipAddress, ___, port] = apiEndpoint.split('/')
+    return `${ipAddress}:${port}`
+  }, [nodeConfig])
 
   if (!token) {
     return (
@@ -90,7 +103,7 @@ function HomePage() {
             </div>
             <div className='flex items-center gap-2'>
               <img src={IcoPort} width={24} height={24} alt='ico-port' />
-              <div className='text-[18px] font-semibold'>https://192.168.1.1</div>
+              <div className='text-[18px] font-semibold'>{nodeEndpoint}</div>
             </div>
           </div>
         </div>
@@ -98,11 +111,11 @@ function HomePage() {
           <img src={NodeUsage} width={124} height={124} alt='port-img' />
           <div className='flex-1 flex flex-col gap-4'>
             <div className='font-semibold text-[14px] text-[#8D8D8D] tracking-[2px]'>
-              NODE USAGE
+              NODE STATUS
             </div>
             <div className='flex items-center gap-2'>
-              <img src={IcoChart} width={24} height={24} alt='ico-port' />
-              <div className='text-[18px] font-semibold'>0 MB/s</div>
+              {/* <img src={IcoChart} width={24} height={24} alt='ico-port' /> */}
+              <div className='text-[18px] font-semibold'>{nodeStatus}</div>
             </div>
           </div>
         </div>
@@ -116,7 +129,7 @@ function HomePage() {
                 </div>
                 <div className='flex items-center gap-2'>
                   <img src={IcoUsername} width={24} height={24} alt='ico-port' />
-                  <div className='text-[18px] font-semibold'>admin</div>
+                  <div className='text-[18px] font-semibold'>{authStore.username}</div>
                 </div>
               </div>
             </div>
@@ -129,7 +142,7 @@ function HomePage() {
                 <div className='flex items-center gap-2'>
                   <img src={IcoPassword} width={24} height={24} alt='ico-port' />
                   <div className='text-[18px] font-semibold'>
-                    <input disabled type={isShowPassword ? 'text' : 'password'} value="12345" className='bg-transparent !outline-none !border-none !px-0 !py-0' />
+                    <input disabled type={isShowPassword ? 'text' : 'password'} value={authStore.password} className='bg-transparent !outline-none !border-none !px-0 !py-0' />
                   </div>
                   <button onClick={() => setIsShowPassword(!isShowPassword)}><img src={IcoShow} width={24} height={24} alt='ico-show' /></button>
                 </div>
@@ -139,16 +152,10 @@ function HomePage() {
         )}
       </div>
       <div className='w-full flex items-center py-6 px-10 absolute bottom-0'>
-        {haveAccount ? (
-          <Button
-            onClick={() => setIsRunning(!isRunning)}
-            type={isRunning ? 'danger' : 'primary'} className='w-full !py-4'>
-            <span className='font-semibold text-[14px] tracking-[1px]'>{isRunning ? 'STOP' : 'START'} RUNNING</span>
-          </Button>
-        ) : (
+        {!haveAccount && (
           <Button
             onClick={() => navigate('/setup')}
-            type={isRunning ? 'danger' : 'primary'} className='w-full !py-4'
+            type="primary" className='w-full !py-4'
           >
             <span className='font-semibold text-[14px] tracking-[1px]'>SETUP ACCOUNT</span>
           </Button>

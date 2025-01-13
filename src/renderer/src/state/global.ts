@@ -9,6 +9,8 @@ interface GlobalState {
   setAlreadySetup: (alreadySetup: boolean) => void;
   token: string;
   setToken: (token: string) => void;
+  nodeStatus: string;
+  setNodeStatus: (nodeStatus: string) => void;
 }
 
 export const useGlobalStore = create<GlobalState>()((set) => ({
@@ -23,5 +25,7 @@ export const useGlobalStore = create<GlobalState>()((set) => ({
   alreadySetup: false,
   setAlreadySetup: (alreadySetup: boolean) => set({ alreadySetup }),
   token: "",
-  setToken: (token: string) => set({ token })
+  setToken: (token: string) => set({ token }),
+  nodeStatus: "",
+  setNodeStatus: (nodeStatus: string) => set({ nodeStatus })
 }));
