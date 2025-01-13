@@ -94,7 +94,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.u2u.subnet')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
