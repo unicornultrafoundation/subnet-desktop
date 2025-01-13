@@ -137,7 +137,7 @@ function getPaths(): Paths {
         config: path.join(os.homedir(), '.config', 'SubnetDesktop'),
         logs: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'logs'),
         cache: path.join(os.homedir(), '.cache', 'SubnetDesktop'),
-        resources: path.join(electron.app.getAppPath(), 'resources'),
+        resources: path.join(resourcesPath, 'resources'),
         lima: path.join(os.homedir(), '.lima'),
         integration: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'integration'),
         deploymentProfileSystem: '/etc/subnet-desktop/deploymentProfileSystem',
