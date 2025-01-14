@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRequestRPC } from './useRequestRPC'
+import { useGlobalStore } from '@renderer/state/global';
 
 export const useNodeStatus = () => {
   const { requestRPC } = useRequestRPC()
-  // const { nodeURL } = useAuthStore();
+  const { token } = useGlobalStore();
 
   return useQuery({
-    queryKey: ['node-status'],
+    queryKey: ['node-status', token],
     queryFn: async () => {
       try {
         // if (!nodeURL) return false;

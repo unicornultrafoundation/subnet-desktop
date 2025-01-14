@@ -17,7 +17,7 @@ const Installation = () => {
     <div className="w-full flex flex-col pt-6 justify-end h-full">
       <div className="w-full flex flex-col gap-2 items-center">
         <h3>Subnet Client by U2U Network</h3>
-        <div className="text-white/50">Starting node, please wait... {nodeStatus}</div>
+        <div className="text-white/50">Starting node... {nodeStatus}</div>
       </div>
       {step && (
         <div className="flex w-full mt-12 justify-center items-center gap-4">

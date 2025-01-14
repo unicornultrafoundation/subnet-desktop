@@ -15,10 +15,6 @@ const router = createBrowserRouter([
     path: '/setup',
     element: <AccountPage />
   },
-  // {
-  //   path: '/init',
-  //   element: <SetupPage />
-  // }
 ])
 
 function App(): ReactNode {
@@ -37,15 +33,9 @@ function App(): ReactNode {
     })
   }, [])
 
-  // return <SetupPage />
-
-  if (!alreadySetup) {
-    return <SetupPage />
-  }
-
   return (
     <ToastProvider>
-      <RouterProvider router={router} />
+      {alreadySetup ? <RouterProvider router={router} /> : <SetupPage />}
     </ToastProvider>
   )
 }

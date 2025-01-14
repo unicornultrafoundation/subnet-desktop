@@ -32,7 +32,6 @@ export const useRequestRPC = () => {
 
     const rs = await fetch('http://localhost:8080', requestOptions)
     if (rs.status === 401) {
-      console.log('in here')
       throw new Error('Unauthorized')
     }
     const rsJSON = await rs.json()

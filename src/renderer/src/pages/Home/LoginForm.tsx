@@ -3,7 +3,7 @@ import Input from '@renderer/components/Input'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { useNodeStatus } from '@renderer/hooks/useNodeStatus'
 import { Label } from 'flowbite-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export default function LoginForm() {
@@ -15,14 +15,16 @@ export default function LoginForm() {
 
   const { mutate: login, status: loginStatus, error: loginError, reset } = useAuth()
 
+  useEffect(() => {
+    if (haveAccount === false) {
+      navigate('/setup')
+      return
+    }
+  }, [haveAccount])
+
   const handleLogin = async () => {
     reset()
     login({ username, password })
-  }
-
-  if (!haveAccount) {
-    navigate('/setup')
-    return
   }
 
   return (
