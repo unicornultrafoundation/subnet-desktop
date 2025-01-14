@@ -41,6 +41,7 @@ import {
   updateSubnetConfig as updateSubnetConfigUtil,
   checkStatus as checkStatusUtil
 } from '../utils/subnet'
+import log from 'electron-log/main';
 
 export const MACHINE_NAME = '0'
 const console = Logging.lima
@@ -867,6 +868,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
       } catch (err) {
         console.error('Error starting lima:', err)
         await this.setState(State.ERROR)
+        log.error(err)
         if (err instanceof BackendError) {
           if (!err.fatal) {
             return
@@ -1156,6 +1158,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         await this.setState(State.STOPPED)
       } catch (ex) {
         await this.setState(State.ERROR)
+        log.error(ex)
         throw ex
       } finally {
         this.currentAction = Action.NONE

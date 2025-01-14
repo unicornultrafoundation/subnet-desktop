@@ -1,7 +1,7 @@
 {
   "name": "subnet-desktop",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "U2U subnet client",
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
@@ -31,6 +31,7 @@
     "@web3modal/wagmi": "^5.1.11",
     "axios": "^1.7.9",
     "buffer": "^6.0.3",
+    "electron-log": "^5.2.4",
     "electron-updater": "^6.1.7",
     "embla-carousel": "^8.5.1",
     "embla-carousel-react": "^8.5.1",

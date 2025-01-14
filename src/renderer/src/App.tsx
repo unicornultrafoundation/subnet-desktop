@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import HomePage from './pages/Home'
 import ToastProvider from './components/ToastProvider'
 import { ReactNode, useEffect } from 'react'
@@ -6,7 +6,7 @@ import SetupPage from './pages/SetupPage'
 import { useGlobalStore } from './state/global'
 import AccountPage from './pages/AccountPage'
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <HomePage />
@@ -22,7 +22,6 @@ function App(): ReactNode {
 
   useEffect(() => {
     window.electron.ipcRenderer.on('subnet-status', (_, value) => {
-      console.log('subnet-status value', value)
       setAlreadySetup(value === 'STARTED')
       setNodeStatus(value)
     })
