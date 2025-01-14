@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <Flowbite theme={{ mode: 'dark' }}>
       <QueryClientProvider client={queryClient}>
         {/* <WagmiProvider config={wagmiConfig}> */}
-          <App />
+        <App />
         {/* </WagmiProvider> */}
       </QueryClientProvider>
     </Flowbite>

@@ -1,14 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { useRequestRPC } from "./useRequestRPC";
+import { useQuery } from '@tanstack/react-query'
+import { useRequestRPC } from './useRequestRPC'
 
 export const useCountApps = () => {
-  const { requestRPC } = useRequestRPC();
+  const { requestRPC } = useRequestRPC()
 
   return useQuery({
-    queryKey: ["count-apps"],
+    queryKey: ['count-apps'],
     queryFn: async () => {
-      const rs = await requestRPC("app_getAppCount");
-      return Number(rs);
-    },
-  });
-};
+      const rs = await requestRPC('app_getAppCount')
+      return Number(rs)
+    }
+  })
+}

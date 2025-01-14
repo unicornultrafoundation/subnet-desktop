@@ -1,13 +1,8 @@
-import { IconProps } from ".";
+import { IconProps } from '.'
 
-export default function CloseIcon({
-  width,
-  height,
-  style,
-  color,
-}: Omit<IconProps, "name">) {
-  const w = width || 24;
-  const h = height || 24;
+export default function CloseIcon({ width, height, style, color }: Omit<IconProps, 'name'>) {
+  const w = width || 24
+  const h = height || 24
 
   return (
     <div
@@ -15,9 +10,9 @@ export default function CloseIcon({
         ...{
           width: w,
           height: h,
-          aspectRatio: 1,
+          aspectRatio: 1
         },
-        ...style,
+        ...style
       }}
     >
       <svg
@@ -29,19 +24,19 @@ export default function CloseIcon({
       >
         <path
           d="M18 6L6 18"
-          stroke={color || "#8D8D8D"}
+          stroke={color || '#8D8D8D'}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M6 6L18 18"
-          stroke={color || "#8D8D8D"}
+          stroke={color || '#8D8D8D'}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
     </div>
-  );
+  )
 }

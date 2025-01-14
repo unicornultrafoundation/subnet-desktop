@@ -13,13 +13,13 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev --sourcemap",
-    "dev:web": "electron-vite dev --inspect-brk --sourcemap",
+    "dev:web": "electron-vite dev --inspect --sourcemap",
     "build": "electron-vite build",
     "postinstall": "node scripts/ts-wrapper.js scripts/postinstall.ts",
     "postuninstall": "cross-env BROWSERSLIST_IGNORE_OLD_DATA=1 electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:mac": "export CSC_IDENTITY_AUTO_DISCOVERY=false && electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {

@@ -1,16 +1,13 @@
-import { useToast } from "./useToast";
+import { useToast } from './useToast'
 
 const useToastNotification = () => {
-  const { addToast } = useToast();
+  const { addToast } = useToast()
 
-  const showToast = (
-    message: string,
-    type: "info" | "success" | "error" = "info",
-  ) => {
-    addToast(message, type);
-  };
+  const showToast = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
+    addToast(message, type)
+  }
 
-  return { showToast };
-};
+  return { showToast }
+}
 
-export default useToastNotification;
+export default useToastNotification

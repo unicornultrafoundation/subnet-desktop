@@ -18,49 +18,49 @@
  * fs.readFile(Logging.topic.path, ...);
  */
 
-import { Console } from 'console';
-import fs from 'fs';
-import path from 'path';
-import stream from 'stream';
-import util from 'util';
+import { Console } from 'console'
+import fs from 'fs'
+import path from 'path'
+import stream from 'stream'
+import util from 'util'
 
-import paths from './paths';
+import paths from './paths'
 
-type consoleKey = 'log' | 'error' | 'info' | 'warn';
-type logLevel = 'debug' | 'info';
+type consoleKey = 'log' | 'error' | 'info' | 'warn'
+type logLevel = 'debug' | 'info'
 
-let LOG_LEVEL: logLevel = 'info';
+let LOG_LEVEL: logLevel = 'info'
 
 export function setLogLevel(level: logLevel): void {
-  LOG_LEVEL = level;
+  LOG_LEVEL = level
 }
 
 export class Log {
   constructor(topic: string, directory = paths.logs) {
     if (process.type === 'renderer') {
-      topic = `${ topic }-renderer`;
+      topic = `${topic}-renderer`
     }
-    this.path = path.join(directory, `${ topic }.log`);
-    this.reopen();
+    this.path = path.join(directory, `${topic}.log`)
+    this.reopen()
     // The following lines only exist because TypeScript can't reason about
     // the call to this.reopen() correctly.  They are unused.
-    this.realStream ??= fs.createWriteStream(this.path, { flags: 'ERROR' });
-    this.console ??= globalThis.console;
-    this.fdPromise ??= Promise.reject();
+    this.realStream ??= fs.createWriteStream(this.path, { flags: 'ERROR' })
+    this.console ??= globalThis.console
+    this.fdPromise ??= Promise.reject()
   }
 
   /** The path to the log file. */
-  readonly path: string;
+  readonly path: string
 
   /** A stream to write to the log file. */
   get stream(): fs.WriteStream {
-    return this.realStream;
+    return this.realStream
   }
 
   /** The underlying console stream. */
-  protected console: Console;
+  protected console: Console
 
-  protected realStream: fs.WriteStream;
+  protected realStream: fs.WriteStream
 
   /**
    * Reopen the logs; this is necessary after a factory reset because the files
@@ -72,27 +72,27 @@ export class Log {
     if (process.env.RD_TEST === 'e2e') {
       // If we're running E2E tests, we may need to create the log directory.
       // We don't do this normally because it's synchronous and slow.
-      fs.mkdirSync(path.dirname(this.path), { recursive: true });
+      fs.mkdirSync(path.dirname(this.path), { recursive: true })
     }
-    this.realStream?.close();
-    this.realStream = fs.createWriteStream(this.path, { flags: mode, mode: 0o600 });
+    this.realStream?.close()
+    this.realStream = fs.createWriteStream(this.path, { flags: mode, mode: 0o600 })
     this.fdPromise = new Promise((resolve) => {
-      this.stream.on('open', resolve);
-    });
-    delete this._fdStream;
+      this.stream.on('open', resolve)
+    })
+    delete this._fdStream
     // If we're running unit tests, output to the console rather than file.
     // However, _don't_ do so for end-to-end tests in Playwright.
     // We detect Playwright via an environment variable we set in scripts/e2e.ts
     if (import.meta.env.DEV === true) {
-      this.console = globalThis.console;
+      this.console = globalThis.console
     } else {
-      this.console = new Console(this.stream);
+      this.console = new Console(this.stream)
     }
   }
 
-  protected fdPromise: Promise<number>;
+  protected fdPromise: Promise<number>
 
-  _fdStream: Promise<stream.Writable> | undefined;
+  _fdStream: Promise<stream.Writable> | undefined
 
   /**
    * A stream to write to the log file, with the guarantee that it has a
@@ -100,38 +100,38 @@ export class Log {
    */
   get fdStream(): Promise<stream.Writable> {
     if (!this._fdStream) {
-      this._fdStream = (new Promise<stream.Writable>((resolve, reject) => {
+      this._fdStream = new Promise<stream.Writable>((resolve, reject) => {
         this.stream.write('', (error) => {
           if (error) {
-            reject(error);
+            reject(error)
           } else {
-            resolve(this.stream);
+            resolve(this.stream)
           }
-        });
-      }));
+        })
+      })
     }
 
-    return this._fdStream;
+    return this._fdStream
   }
 
   /** Print a log message to the log file; appends a new line as appropriate. */
   log(message: any, ...optionalParameters: any[]) {
-    this.logWithDate('log', message, optionalParameters);
+    this.logWithDate('log', message, optionalParameters)
   }
 
   /** Print a log message to the log file; appends a new line as appropriate. */
   error(message: any, ...optionalParameters: any[]) {
-    this.logWithDate('error', message, optionalParameters);
+    this.logWithDate('error', message, optionalParameters)
   }
 
   /** Print a log message to the log file; appends a new line as appropriate. */
   info(message: any, ...optionalParameters: any[]) {
-    this.logWithDate('info', message, optionalParameters);
+    this.logWithDate('info', message, optionalParameters)
   }
 
   /** Print a log message to the log file; appends a new line as appropriate. */
   warn(message: any, ...optionalParameters: any[]) {
-    this.logWithDate('warn', message, optionalParameters);
+    this.logWithDate('warn', message, optionalParameters)
   }
 
   /**
@@ -139,7 +139,7 @@ export class Log {
    */
   debug(data: any, ...args: any[]) {
     if (LOG_LEVEL === 'debug') {
-      this.log(data, ...args);
+      this.log(data, ...args)
     }
   }
 
@@ -150,43 +150,46 @@ export class Log {
    */
   debugE(message: string, exception: any) {
     if (process.env.RD_TEST || process.env.NODE_ENV !== 'production') {
-      this.debug(message, exception);
+      this.debug(message, exception)
     } else {
-      this.debug(`${ message } ${ exception }`);
+      this.debug(`${message} ${exception}`)
     }
   }
 
   protected logWithDate(method: consoleKey, message: any, optionalParameters: any[]) {
-    this.console[method](`%s: ${ message }`, new Date().toISOString(), ...optionalParameters);
+    this.console[method](`%s: ${message}`, new Date().toISOString(), ...optionalParameters)
   }
 
   async sync() {
-    await util.promisify(fs.fsync)(await this.fdPromise);
+    await util.promisify(fs.fsync)(await this.fdPromise)
   }
 }
 
 interface Module {
-  [topic: string]: Log;
+  [topic: string]: Log
 }
 
-const logs = new Map<string, Log>();
+const logs = new Map<string, Log>()
 
 // We export a Proxy, so that we can catch all accesses to any properties, and
 // dynamically create a new log as necessary.  All property accesses on the
 // Proxy get shunted to the `get()` method, which can handle it similar to
 // Ruby's method_missing.
-export default new Proxy<Module>({}, {
-  get: (target, prop, receiver) => {
-    if (typeof prop !== 'string') {
-      return Reflect.get(target, prop, receiver);
-    }
+export default new Proxy<Module>(
+  {},
+  {
+    get: (target, prop, receiver) => {
+      if (typeof prop !== 'string') {
+        return Reflect.get(target, prop, receiver)
+      }
 
-    if (!logs.has(prop)) {
-      logs.set(prop, new Log(prop));
+      if (!logs.has(prop)) {
+        logs.set(prop, new Log(prop))
+      }
+      return logs.get(prop)
     }
-    return logs.get(prop);
-  },
-});
+  }
+)
 
 /**
  * Delete any existing log files from the logging directory, with the exception
@@ -196,22 +199,22 @@ export default new Proxy<Module>({}, {
  */
 export function clearLoggingDirectory(): void {
   if (process.env.RD_TEST === 'e2e' || process.type !== 'browser') {
-    return;
+    return
   }
 
-  const entries = fs.readdirSync(paths.logs, { withFileTypes: true });
+  const entries = fs.readdirSync(paths.logs, { withFileTypes: true })
 
   for (const entry of entries) {
     if (entry.isFile() && entry.name.endsWith('.log')) {
-      const topic = path.basename(entry.name, '.log');
+      const topic = path.basename(entry.name, '.log')
 
       if (!logs.has(topic)) {
-        const fullPath = path.join(paths.logs, entry.name);
+        const fullPath = path.join(paths.logs, entry.name)
 
         try {
-          fs.unlinkSync(fullPath);
+          fs.unlinkSync(fullPath)
         } catch (ex: any) {
-          console.log(`Failed to delete log file ${ fullPath }: ${ ex }`);
+          console.log(`Failed to delete log file ${fullPath}: ${ex}`)
         }
       }
     }
@@ -220,11 +223,11 @@ export function clearLoggingDirectory(): void {
 
 export function reopenLogs() {
   for (const log of logs.values()) {
-    log['reopen']('a');
+    log['reopen']('a')
     // Trigger making the stream (by passing it to `Array.of()` and ignoring the
     // result).
-    Array.of(log.fdStream);
+    Array.of(log.fdStream)
   }
 }
 
-fs.mkdirSync(paths.logs, { recursive: true });
+fs.mkdirSync(paths.logs, { recursive: true })

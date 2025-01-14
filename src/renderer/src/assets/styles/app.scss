@@ -1,64 +1,40 @@
 // Fonts
-@use "fonts/font";
+@use 'fonts/font';
 // Library
 
 // Theme
-@use "theme";
-@use "color";
-@use "typography";
-@use "animate";
+@use 'theme';
+@use 'color';
+@use 'typography';
+@use 'animate';
 
 // Custom
 .btn-primary {
   @apply border-[1px] border-primary-500;
-  background: linear-gradient(
-    180deg,
-    rgba(41, 163, 122, 0) 0%,
-    rgba(41, 163, 122, 0.32) 100%
-  );
+  background: linear-gradient(180deg, rgba(41, 163, 122, 0) 0%, rgba(41, 163, 122, 0.32) 100%);
   box-shadow: 0px 0px 8px 1px #29a37aa3 inset;
 
   &:hover {
-    background: linear-gradient(
-      180deg,
-      rgba(41, 163, 122, 0) 0%,
-      rgba(41, 163, 122, 0.8) 100%
-    );
+    background: linear-gradient(180deg, rgba(41, 163, 122, 0) 0%, rgba(41, 163, 122, 0.8) 100%);
   }
 }
 
 .btn-secondary {
   @apply border-[1px] border-neutral-900;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.32) 100%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.32) 100%);
   box-shadow: 0px 0px 8px 1px #ffffffa3 inset;
 
   &:hover {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.6) 100%
-    );
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 100%);
   }
 }
 
 .btn-danger {
   @apply border-[1px] border-error-500;
-  background: linear-gradient(
-    180deg,
-    rgba(242, 68, 68, 0) 0%,
-    rgba(242, 68, 68, 0.32) 100%
-  );
+  background: linear-gradient(180deg, rgba(242, 68, 68, 0) 0%, rgba(242, 68, 68, 0.32) 100%);
   box-shadow: 0px 0px 8px 1px #f24444a3 inset;
 
   &:hover {
-    background: linear-gradient(
-      180deg,
-      rgba(242, 68, 68, 0) 0%,
-      rgba(242, 68, 68, 0.6) 100%
-    );
+    background: linear-gradient(180deg, rgba(242, 68, 68, 0) 0%, rgba(242, 68, 68, 0.6) 100%);
   }
 }

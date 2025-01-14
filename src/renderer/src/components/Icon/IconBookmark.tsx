@@ -1,11 +1,11 @@
-import classNames from "classnames";
-import { FC } from "react";
-import { IconProps } from "@/components/ImageBase/ImageBase.tsx";
+import classNames from 'classnames'
+import { FC } from 'react'
+import { IconProps } from '@/components/ImageBase/ImageBase'
 
 interface BaseProps extends IconProps {}
 
 const IconBookmark: FC<BaseProps> = (props) => {
-  const { ...rest } = props;
+  const { ...rest } = props
 
   return (
     <svg
@@ -15,7 +15,7 @@ const IconBookmark: FC<BaseProps> = (props) => {
       viewBox="0 0 32 32"
       fill="none"
       {...rest}
-      className={classNames(rest?.className ?? "")}
+      className={classNames(rest?.className ?? '')}
     >
       <path
         fillRule="evenodd"
@@ -34,7 +34,7 @@ const IconBookmark: FC<BaseProps> = (props) => {
         strokeLinejoin="round"
       />
     </svg>
-  );
-};
+  )
+}
 
-export default IconBookmark;
+export default IconBookmark

@@ -1,20 +1,23 @@
-import Button from "@renderer/components/Button";
-import Input from "@renderer/components/Input";
-import { useSetupNode } from "@renderer/hooks/useSetupNode";
-import { Label } from "flowbite-react";
-import { useState } from "react";
+import Button from '@renderer/components/Button'
+import Input from '@renderer/components/Input'
+import { useSetupNode } from '@renderer/hooks/useSetupNode'
+import { Label } from 'flowbite-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function AccountPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
-  const { mutate: setupNode, isPending } = useSetupNode();
+  const { mutate: setupNode, isPending } = useSetupNode()
+  const navigate = useNavigate()
 
   const handleSetupNode = async () => {
     // TODO: validate password confirm
-    setupNode({ username, password });
-  };
+    setupNode({ username, password })
+    navigate('/')
+  }
 
   return (
     <main className="p-6 relative flex min-h-screen flex-col">

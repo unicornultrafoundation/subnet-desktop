@@ -1,115 +1,115 @@
 /**
  * This module describes the various paths we use to store state & data.
  */
-import os from 'os';
-import path from 'path';
+import os from 'os'
+import path from 'path'
 
-import electron from 'electron';
+import electron from 'electron'
 
 export interface Paths {
   /** appHome: the location of the main appdata directory. */
-  appHome: string;
+  appHome: string
   /** altAppHome is a secondary directory for application data. */
-  altAppHome: string;
+  altAppHome: string
   /** Directory which holds configuration. */
-  config: string;
+  config: string
   /** Directory which holds logs. */
-  logs: string;
+  logs: string
   /** Directory which holds caches that may be removed. */
-  cache: string;
+  cache: string
   /** Directory that holds resource files in the RD installation. */
-  resources: string;
+  resources: string
   /** Directory holding Lima state (Unix-specific). */
-  lima: string;
+  lima: string
   /** Directory holding provided binary resources */
-  integration: string;
+  integration: string
   /** Deployment Profile System-wide startup settings path. */
-  deploymentProfileSystem: string;
+  deploymentProfileSystem: string
   /** Deployment Profile User startup settings path. */
-  deploymentProfileUser: string;
+  deploymentProfileUser: string
   /** Directory that will hold extension data. */
-  readonly extensionRoot: string;
+  readonly extensionRoot: string
   /** Directory holding the WSL distribution (Windows-specific). */
-  wslDistro: string;
+  wslDistro: string
   /** Directory holding the WSL data distribution (Windows-specific). */
-  wslDistroData: string;
+  wslDistroData: string
   /** Directory that holds snapshots. */
-  snapshots: string;
+  snapshots: string
   /** Directory that holds user-managed containerd-shims. */
-  containerdShims: string;
+  containerdShims: string
 }
 
 export class UnixPaths implements Paths {
-  appHome = '';
-  altAppHome = '';
-  config = '';
-  logs = '';
-  cache = '';
-  resources = '';
-  lima = '';
-  integration = '';
-  deploymentProfileSystem = '';
-  deploymentProfileUser = '';
-  extensionRoot = '';
-  snapshots = '';
-  containerdShims = '';
+  appHome = ''
+  altAppHome = ''
+  config = ''
+  logs = ''
+  cache = ''
+  resources = ''
+  lima = ''
+  integration = ''
+  deploymentProfileSystem = ''
+  deploymentProfileUser = ''
+  extensionRoot = ''
+  snapshots = ''
+  containerdShims = ''
 
   constructor(pathsData: Record<string, unknown>) {
-    Object.assign(this, pathsData);
+    Object.assign(this, pathsData)
   }
 
   get wslDistro(): string {
-    throw new Error('wslDistro not available for Unix');
+    throw new Error('wslDistro not available for Unix')
   }
 
   get wslDistroData(): string {
-    throw new Error('wslDistroData not available for Unix');
+    throw new Error('wslDistroData not available for Unix')
   }
 }
 
 export class WindowsPaths implements Paths {
-  appHome = '';
-  altAppHome = '';
-  config = '';
-  logs = '';
-  cache = '';
-  resources = '';
-  extensionRoot = '';
-  wslDistro = '';
-  wslDistroData = '';
-  snapshots = '';
-  containerdShims = '';
+  appHome = ''
+  altAppHome = ''
+  config = ''
+  logs = ''
+  cache = ''
+  resources = ''
+  extensionRoot = ''
+  wslDistro = ''
+  wslDistroData = ''
+  snapshots = ''
+  containerdShims = ''
 
   constructor(pathsData: Record<string, unknown>) {
-    Object.assign(this, pathsData);
+    Object.assign(this, pathsData)
   }
 
   get lima(): string {
-    throw new Error('lima not available for Windows');
+    throw new Error('lima not available for Windows')
   }
 
   get integration(): string {
-    throw new Error('Internal error: integration path not available for Windows');
+    throw new Error('Internal error: integration path not available for Windows')
   }
 
   get deploymentProfileSystem(): string {
-    throw new Error('Internal error: Windows profiles will be read from Registry');
+    throw new Error('Internal error: Windows profiles will be read from Registry')
   }
 
   get deploymentProfileUser(): string {
-    throw new Error('Internal error: Windows profiles will be read from Registry');
+    throw new Error('Internal error: Windows profiles will be read from Registry')
   }
 }
 
 function getPaths(): Paths {
-  const pathsData = {};
+  const pathsData = {}
 
-  let resourcesPath: string;
+  let resourcesPath: string
   // If we are running as a script (i.e. yarn postinstall), electron.app is undefined
   if (electron.app?.isPackaged) {
-    resourcesPath = path.join(process.resourcesPath, "app.asar.unpacked");
+    resourcesPath = path.join(process.resourcesPath, 'app.asar.unpacked')
   } else {
-    resourcesPath = electron.app?.getAppPath() || '';
+    resourcesPath = electron.app?.getAppPath() || ''
   }
 
   switch (process.platform) {
@@ -122,14 +122,45 @@ function getPaths(): Paths {
         cache: path.join(os.homedir(), 'Library', 'Caches', 'SubnetDesktop'),
         resources: path.join(resourcesPath, 'resources'),
         lima: path.join(os.homedir(), '.lima'),
-        integration: path.join(os.homedir(), 'Library', 'Application Support', 'SubnetDesktop', 'integration'),
-        deploymentProfileSystem: '/Library/Application Support/SubnetDesktop/deploymentProfileSystem',
-        deploymentProfileUser: path.join(os.homedir(), 'Library', 'Application Support', 'SubnetDesktop', 'deploymentProfileUser'),
-        extensionRoot: path.join(os.homedir(), 'Library', 'Application Support', 'SubnetDesktop', 'extensions'),
-        snapshots: path.join(os.homedir(), 'Library', 'Application Support', 'SubnetDesktop', 'snapshots'),
-        containerdShims: path.join(os.homedir(), 'Library', 'Application Support', 'SubnetDesktop', 'containerd-shims'),
-      });
-      return new UnixPaths(pathsData);
+        integration: path.join(
+          os.homedir(),
+          'Library',
+          'Application Support',
+          'SubnetDesktop',
+          'integration'
+        ),
+        deploymentProfileSystem:
+          '/Library/Application Support/SubnetDesktop/deploymentProfileSystem',
+        deploymentProfileUser: path.join(
+          os.homedir(),
+          'Library',
+          'Application Support',
+          'SubnetDesktop',
+          'deploymentProfileUser'
+        ),
+        extensionRoot: path.join(
+          os.homedir(),
+          'Library',
+          'Application Support',
+          'SubnetDesktop',
+          'extensions'
+        ),
+        snapshots: path.join(
+          os.homedir(),
+          'Library',
+          'Application Support',
+          'SubnetDesktop',
+          'snapshots'
+        ),
+        containerdShims: path.join(
+          os.homedir(),
+          'Library',
+          'Application Support',
+          'SubnetDesktop',
+          'containerd-shims'
+        )
+      })
+      return new UnixPaths(pathsData)
     case 'linux':
       Object.assign(pathsData, {
         appHome: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop'),
@@ -141,12 +172,24 @@ function getPaths(): Paths {
         lima: path.join(os.homedir(), '.lima'),
         integration: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'integration'),
         deploymentProfileSystem: '/etc/subnet-desktop/deploymentProfileSystem',
-        deploymentProfileUser: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'deploymentProfileUser'),
+        deploymentProfileUser: path.join(
+          os.homedir(),
+          '.local',
+          'share',
+          'SubnetDesktop',
+          'deploymentProfileUser'
+        ),
         extensionRoot: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'extensions'),
         snapshots: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'snapshots'),
-        containerdShims: path.join(os.homedir(), '.local', 'share', 'SubnetDesktop', 'containerd-shims'),
-      });
-      return new UnixPaths(pathsData);
+        containerdShims: path.join(
+          os.homedir(),
+          '.local',
+          'share',
+          'SubnetDesktop',
+          'containerd-shims'
+        )
+      })
+      return new UnixPaths(pathsData)
     case 'win32':
       Object.assign(pathsData, {
         appHome: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop'),
@@ -157,14 +200,26 @@ function getPaths(): Paths {
         resources: path.join(resourcesPath, 'resources'),
         extensionRoot: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop', 'extensions'),
         wslDistro: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop', 'wsl-distro'),
-        wslDistroData: path.join(os.homedir(), 'AppData', 'Local', 'SubnetDesktop', 'wsl-distro-data'),
+        wslDistroData: path.join(
+          os.homedir(),
+          'AppData',
+          'Local',
+          'SubnetDesktop',
+          'wsl-distro-data'
+        ),
         snapshots: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop', 'snapshots'),
-        containerdShims: path.join(os.homedir(), 'AppData', 'Roaming', 'SubnetDesktop', 'containerd-shims'),
-      });
-      return new WindowsPaths(pathsData);
+        containerdShims: path.join(
+          os.homedir(),
+          'AppData',
+          'Roaming',
+          'SubnetDesktop',
+          'containerd-shims'
+        )
+      })
+      return new WindowsPaths(pathsData)
     default:
-      throw new Error(`Platform "${process.platform}" is not supported.`);
+      throw new Error(`Platform "${process.platform}" is not supported.`)
   }
 }
 
-export default getPaths();
+export default getPaths()

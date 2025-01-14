@@ -1,37 +1,35 @@
-import React, { createContext, useState, ReactNode } from "react";
-import ToastItem from "./ToastItem";
+import React, { createContext, useState, ReactNode } from 'react'
+import ToastItem from './ToastItem'
 
-type ToastType = "info" | "success" | "error";
+type ToastType = 'info' | 'success' | 'error'
 
 interface ToastData {
-  id: number;
-  message: string;
-  type: ToastType;
+  id: number
+  message: string
+  type: ToastType
 }
 
 export interface ToastContextType {
-  addToast: (message: string, type: ToastType) => void;
+  addToast: (message: string, type: ToastType) => void
 }
 
-export const ToastContext = createContext<ToastContextType | undefined>(
-  undefined,
-);
+export const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
 interface ToastProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [toasts, setToasts] = useState<ToastData[]>([])
 
   const addToast = (message: string, type: ToastType) => {
-    const id = new Date().getTime(); // Use timestamp as a unique ID
-    setToasts((prevToasts) => [...prevToasts, { id, message, type }]);
-  };
+    const id = new Date().getTime() // Use timestamp as a unique ID
+    setToasts((prevToasts) => [...prevToasts, { id, message, type }])
+  }
 
   const removeToast = (id: number) => {
-    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
-  };
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id))
+  }
 
   return (
     <ToastContext.Provider value={{ addToast }}>
@@ -48,7 +46,7 @@ const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       </div>
       {children}
     </ToastContext.Provider>
-  );
-};
+  )
+}
 
-export default ToastProvider;
+export default ToastProvider

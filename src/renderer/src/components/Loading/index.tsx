@@ -1,9 +1,9 @@
-import "./style.css";
+import './style.css'
 
 type Props = {
-  className?: string;
-  size?: number;
-};
+  className?: string
+  size?: number
+}
 
 const Loading: React.FC<Props> = ({ className, size = 48 }) => {
   return (
@@ -11,12 +11,12 @@ const Loading: React.FC<Props> = ({ className, size = 48 }) => {
       <div
         style={{
           width: `${size}px`,
-          height: `${size}px`,
+          height: `${size}px`
         }}
         className={`loader`}
       />
     </div>
-  );
-};
+  )
+}
 
-export default Loading;
+export default Loading

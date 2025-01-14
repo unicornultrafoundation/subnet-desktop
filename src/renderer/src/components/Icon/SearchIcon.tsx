@@ -1,14 +1,14 @@
-import { IconProps } from ".";
+import { IconProps } from '.'
 
 export default function SearchIcon({
   width,
   height,
   style,
   color,
-  className,
-}: Omit<IconProps, "name">) {
-  const w = width || 24;
-  const h = height || 24;
+  className
+}: Omit<IconProps, 'name'>) {
+  const w = width || 24
+  const h = height || 24
 
   return (
     <div
@@ -17,9 +17,9 @@ export default function SearchIcon({
         ...{
           width: w,
           height: h,
-          aspectRatio: 1,
+          aspectRatio: 1
         },
-        ...style,
+        ...style
       }}
     >
       <svg
@@ -33,19 +33,19 @@ export default function SearchIcon({
           cx="11.7666"
           cy="11.7664"
           r="8.98856"
-          stroke={color || "#8D8D8D"}
+          stroke={color || '#8D8D8D'}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M18.0183 18.4849L21.5423 21.9997"
-          stroke={color || "#8D8D8D"}
+          stroke={color || '#8D8D8D'}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
     </div>
-  );
+  )
 }

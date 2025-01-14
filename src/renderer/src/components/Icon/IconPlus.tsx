@@ -1,11 +1,11 @@
-import classNames from "classnames";
-import { FC } from "react";
-import { IconProps } from "@/components/ImageBase/ImageBase.tsx";
+import classNames from 'classnames'
+import { FC } from 'react'
+import { IconProps } from '@/components/ImageBase/ImageBase'
 
 interface BaseProps extends IconProps {}
 
 const IconPlus: FC<BaseProps> = (props) => {
-  const { ...rest } = props;
+  const { ...rest } = props
 
   return (
     <svg
@@ -15,7 +15,7 @@ const IconPlus: FC<BaseProps> = (props) => {
       viewBox="0 0 16 16"
       fill="none"
       {...rest}
-      className={classNames(rest?.className ?? "")}
+      className={classNames(rest?.className ?? '')}
     >
       <path
         d="M8.00032 2.66663V13.3204"
@@ -30,7 +30,7 @@ const IconPlus: FC<BaseProps> = (props) => {
         strokeLinejoin="round"
       />
     </svg>
-  );
-};
+  )
+}
 
-export default IconPlus;
+export default IconPlus

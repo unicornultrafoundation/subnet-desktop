@@ -2,63 +2,60 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import VmFactory from '../backend/factory';
-import * as settings from '../config/settings';
-import * as settingsImpl from '../config/settingsImpl';
-import { setLogLevel } from '../utils/logging';
+import VmFactory from '../backend/factory'
+import * as settings from '../config/settings'
+import * as settingsImpl from '../config/settingsImpl'
+import { setLogLevel } from '../utils/logging'
 
-let cfg: settings.Settings;
-let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} };
+let cfg: settings.Settings
+let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} }
 
 let mainWindow: BrowserWindow
 
 // Do an early check for debugging enabled via the environment variable so that
 // we can turn on extra logging to troubleshoot startup issues.
 if (settingsImpl.runInDebugMode(true)) {
-  setLogLevel('debug');
+  setLogLevel('debug')
 }
 
-
 function newVmManager() {
-  const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
-  const mgr = VmFactory(arch);
+  const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64'
+  const mgr = VmFactory(arch)
 
   mgr.on('progress', () => {
     if (!mainWindow || mainWindow.isDestroyed()) return
     mainWindow.webContents.send('install-progress', mgr.progress)
-  });
+  })
 
   mgr.on('state-changed', (state: string) => {
     if (!mainWindow || mainWindow.isDestroyed()) return
     mainWindow.webContents.send('subnet-status', state)
-  });
+  })
 
-  return mgr;
+  return mgr
 }
 
-const vmmanager = newVmManager();
+const vmmanager = newVmManager()
 
 async function startBackend() {
   try {
-    await startVmManager();
+    await startVmManager()
   } catch (err) {
-    handleFailure(err);
+    handleFailure(err)
   }
 }
 
-
 async function startVmManager() {
-  await vmmanager.start(cfg);
+  await vmmanager.start(cfg)
 }
 
 async function stopVmManager() {
-  await vmmanager.stop();
+  await vmmanager.stop()
 }
 
 async function handleFailure(payload: any) {
   console.log(payload)
 }
-
 
 function createWindow(): void {
   // Create the browser window.
@@ -131,25 +128,23 @@ app.whenReady().then(async () => {
   })
 
   try {
-    cfg = settingsImpl.load(deploymentProfiles);
-  } catch(err) {
+    cfg = settingsImpl.load(deploymentProfiles)
+  } catch (err) {
     console.error(err)
   }
 
-  await startBackend();
-
+  await startBackend()
 })
 
 app.on('window-all-closed', async () => {
   try {
-    await vmmanager.stop();
+    await vmmanager.stop()
   } catch (err) {
-    console.error('Error stopping vmmanager:', err);
+    console.error('Error stopping vmmanager:', err)
   } finally {
-    app.quit();
+    app.quit()
   }
-});
-
+})
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.

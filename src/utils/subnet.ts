@@ -1,7 +1,7 @@
-import fs from 'fs';
-import yaml from 'yaml';
-import { merge } from 'lodash';
-import axios from 'axios';
+import fs from 'fs'
+import yaml from 'yaml'
+import { merge } from 'lodash'
+import axios from 'axios'
 
 /**
  * Update the subnet configuration in /root/.subnet-node/config.yaml
@@ -16,12 +16,12 @@ export async function updateSubnetConfig(
   _execCommand: (...command: string[]) => Promise<void>,
   newConfig: any
 ): Promise<void> {
-  const configPath = '/root/.subnet-node/config.yaml';
-  const configContent = await readFile(configPath);
-  const existingConfig = yaml.parse(configContent);
-  const mergedConfig = merge({}, existingConfig, newConfig);
-  const updatedConfigContent = yaml.stringify(mergedConfig);
-  await writeFile(configPath, updatedConfigContent);
+  const configPath = '/root/.subnet-node/config.yaml'
+  const configContent = await readFile(configPath)
+  const existingConfig = yaml.parse(configContent)
+  const mergedConfig = merge({}, existingConfig, newConfig)
+  const updatedConfigContent = yaml.stringify(mergedConfig)
+  await writeFile(configPath, updatedConfigContent)
 }
 
 /**
@@ -31,13 +31,13 @@ export async function updateSubnetConfig(
 export async function checkStatus(retries = 5, delay = 3000): Promise<boolean> {
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await axios.post('http://localhost:8080/status');
-      return response.data.online;
+      const response = await axios.post('http://localhost:8080/status')
+      return response.data.online
     } catch (error) {
       if (i < retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay))
       }
     }
   }
-  return false;
+  return false
 }

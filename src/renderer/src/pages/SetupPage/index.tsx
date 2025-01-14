@@ -1,11 +1,11 @@
 import BACKGROUND from '@renderer/assets/images/background.png'
 import LOGO_FADE from '@renderer/assets/images/logo_fade.png'
-import Installation from "./Installation";
+import Installation from './Installation'
 
 export type SetupStep = {
-  title: string;
-  desc: string;
-  hideTitle?: boolean;
+  title: string
+  desc: string
+  hideTitle?: boolean
 }
 
 export default function SetupPage() {
@@ -19,13 +19,11 @@ export default function SetupPage() {
       <div
         className="flex flex-row flex-1 w-full bg-contain bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url(${LOGO_FADE})`,
+          backgroundImage: `url(${LOGO_FADE})`
         }}
       >
         <div className="w-full flex flex-col absolute">
-          <div
-            className="w-full h-screen overflow-y-auto p-6"
-          >
+          <div className="w-full h-screen overflow-y-auto p-6">
             <Installation />
           </div>
         </div>

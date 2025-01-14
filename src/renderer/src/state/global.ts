@@ -1,31 +1,31 @@
-import { create } from "zustand";
+import { create } from 'zustand'
 
 interface GlobalState {
-  installStep: string;
-  setInstallStep: (installStep: string) => void;
-  installProgress: string;
-  setInstallProgress: (installProgress: string) => void;
-  alreadySetup: boolean;
-  setAlreadySetup: (alreadySetup: boolean) => void;
-  token: string;
-  setToken: (token: string) => void;
-  nodeStatus: string;
-  setNodeStatus: (nodeStatus: string) => void;
+  installStep: string
+  setInstallStep: (installStep: string) => void
+  installProgress: string
+  setInstallProgress: (installProgress: string) => void
+  alreadySetup: boolean
+  setAlreadySetup: (alreadySetup: boolean) => void
+  token: string
+  setToken: (token: string) => void
+  nodeStatus: string
+  setNodeStatus: (nodeStatus: string) => void
 }
 
 export const useGlobalStore = create<GlobalState>()((set) => ({
-  installStep: "introduction",
+  installStep: 'introduction',
   setInstallStep: (installStep) => {
-    set({ installStep });
+    set({ installStep })
   },
-  installProgress: "",
+  installProgress: '',
   setInstallProgress: (installProgress) => {
     set({ installProgress })
   },
   alreadySetup: false,
   setAlreadySetup: (alreadySetup: boolean) => set({ alreadySetup }),
-  token: "",
+  token: '',
   setToken: (token: string) => set({ token }),
-  nodeStatus: "",
+  nodeStatus: '',
   setNodeStatus: (nodeStatus: string) => set({ nodeStatus })
-}));
+}))

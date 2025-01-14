@@ -6,19 +6,16 @@ module.exports = {
     'plugin:tailwindcss/recommended',
     'prettier'
   ],
-  ignorePatterns: ["dist", ".eslintrc.cjs"],
-  parser: "@typescript-eslint/parser",
-  plugins: ["react-refresh"],
+  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['react-refresh'],
   settings: {
     tailwindcss: {
-      callees: ["twMerge", "createTheme"],
-      classRegex: "^(class(Name)|theme)?$",
-    },
+      callees: ['twMerge', 'createTheme'],
+      classRegex: '^(class(Name)|theme)?$'
+    }
   },
   rules: {
-    "react-refresh/only-export-components": [
-      "warn",
-      { allowConstantExport: true },
-    ],
-  },
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }]
+  }
 }

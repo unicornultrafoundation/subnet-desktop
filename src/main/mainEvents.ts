@@ -3,15 +3,15 @@
  * main process.
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'events'
 
-import type { VMBackend } from '../backend/backend';
-import type { Settings } from '../config/settings';
-import { RecursivePartial, RecursiveReadonly } from '../utils/typeUtils';
+import type { VMBackend } from '../backend/backend'
+import type { Settings } from '../config/settings'
+import { RecursivePartial, RecursiveReadonly } from '../utils/typeUtils'
 
 export class NoMainEventsHandlerError extends Error {
   constructor(eventName: string) {
-    super(`No handlers registered for mainEvents::${ eventName }`);
+    super(`No handlers registered for mainEvents::${eventName}`)
   }
 }
 
@@ -27,50 +27,50 @@ interface MainEventNames {
   /**
    * Emitted when the Kubernetes backend state has changed.
    */
-  'k8s-check-state'(mgr: VMBackend): void;
+  'k8s-check-state'(mgr: VMBackend): void
 
   /**
    * Fetch the currently stored settings.
    * @note This may not match the currently active settings.
    */
-  'settings-fetch'(): Settings;
+  'settings-fetch'(): Settings
 
   /**
    * Emitted when the settings have been changed.
    *
    * @param settings The new settings.
    */
-  'settings-update'(settings: Settings): void;
+  'settings-update'(settings: Settings): void
 
   /**
    * Emitted to request that the settings be changed.
    *
    * @param settings The settings to change.
    */
-  'settings-write'(settings: RecursivePartial<RecursiveReadonly<Settings>>): void;
+  'settings-write'(settings: RecursivePartial<RecursiveReadonly<Settings>>): void
 
   /**
    * Emitted as a request to get the CA certificates.
    */
-  'cert-get-ca-certificates'(): void;
+  'cert-get-ca-certificates'(): void
 
   /**
    * Emitted as a reply to 'cert-get-ca-certificates'.
    *
    * @param certs The certificates found.
    */
-  'cert-ca-certificates'(certs: (string | Buffer)[]): void;
+  'cert-ca-certificates'(certs: (string | Buffer)[]): void
 
   /**
    * Emitted after the network setup is complete.
    */
-  'network-ready'(): void;
+  'network-ready'(): void
 
   /**
    * Emitted when the network comes online or goes offline.
    * @param connected The new network state.
    */
-  'update-network-status'(connected: boolean): void;
+  'update-network-status'(connected: boolean): void
 
   /**
    * Emitted when the integration state has changed.
@@ -78,7 +78,7 @@ interface MainEventNames {
    * @param state A mapping of WSL distributions to the current state, or a
    * string if there is an error.
    */
-  'integration-update'(state: Record<string, boolean | string>): void;
+  'integration-update'(state: Record<string, boolean | string>): void
 
   /**
    * Fetch the API credentials that can be used for HTTP basic auth on localhost
@@ -87,37 +87,37 @@ interface MainEventNames {
    * @note These credentials are meant for the UI; using them may require user
    * interaction.
    */
-  'api-get-credentials'(): { user: string, password: string, port: number };
+  'api-get-credentials'(): { user: string; password: string; port: number }
 
   /**
    * Generically signify that a diagnostic should be updated.
    * @param id The diagnostic identifier.
    * @param state The new state for the diagnostic.
    */
-  'diagnostics-event'(payload: DiagnosticsEventPayload): void;
+  'diagnostics-event'(payload: DiagnosticsEventPayload): void
 
   /**
    * Emitted when an extension is uninstalled via the extension manager.
    * @param id The ID of the extension that was uninstalled.
    */
-  'extensions/ui/uninstall'(id: string): void;
+  'extensions/ui/uninstall'(id: string): void
 
   /**
    * Emitted on application quit; this is used to shut down extensions.
    */
-  'extensions/shutdown'(): Promise<void>;
+  'extensions/shutdown'(): Promise<void>
 
   /**
    * Emitted on application quit, used to shut down any integrations.  This
    * requires feedback from the handler to know when all tasks are complete.
    */
-  'shutdown-integrations'(): Promise<void>;
+  'shutdown-integrations'(): Promise<void>
 
   /**
    * Emitted on application quit.  Note that at this point we're committed to
    * quitting.
    */
-  'quit'(): void;
+  'quit'(): void
 
   /**
    * Emitted when the state of the backend lock changes. An empty string indicates
@@ -127,15 +127,15 @@ interface MainEventNames {
    * actions that could cause problems with snapshot operations (as of the time of
    * writing snapshots is the sole use for this).
    */
-  'backend-locked-update'(backendIsLocked: string, action?: string): void;
+  'backend-locked-update'(backendIsLocked: string, action?: string): void
 
   /**
    * Emitted when a component wants to check the state of the backend lock.
    * Responds by emitting a backend-locked-update.
    */
-  'backend-locked-check'(): void;
+  'backend-locked-check'(): void
 
-  'dialog-info'(args: Record<string, string>): void;
+  'dialog-info'(args: Record<string, string>): void
 }
 
 /**
@@ -143,8 +143,8 @@ interface MainEventNames {
  * 'diagnostics-event' event.
  */
 type DiagnosticsEventPayload =
-  { id: 'kube-versions-available', available: boolean } |
-  { id: 'path-management', fileName: string; error: Error | undefined };
+  | { id: 'kube-versions-available'; available: boolean }
+  | { id: 'path-management'; fileName: string; error: Error | undefined }
 
 /**
  * Helper type definition to check if the given event name is a handler (i.e.
@@ -153,7 +153,7 @@ type DiagnosticsEventPayload =
 type IsHandler<eventName extends keyof MainEventNames> =
   // We check if void extends the return type; if the return type is also void,
   // then this check succeeds (they're equal); otherwise, it fails.
-  void extends ReturnType<MainEventNames[eventName]> ? false : true;
+  void extends ReturnType<MainEventNames[eventName]> ? false : true
 
 /**
  * Parameter types for mainEvents.invoke(eventName, ...params)
@@ -161,9 +161,7 @@ type IsHandler<eventName extends keyof MainEventNames> =
  * that do not return void.
  */
 type HandlerParams<eventName extends keyof MainEventNames> =
-  IsHandler<eventName> extends true
-  ? Parameters<MainEventNames[eventName]>
-  : never;
+  IsHandler<eventName> extends true ? Parameters<MainEventNames[eventName]> : never
 
 /**
  * The return type for mainEvents.invoke(eventName, ...), without the Promise<>
@@ -171,9 +169,7 @@ type HandlerParams<eventName extends keyof MainEventNames> =
  * MainEventNames that do not return void.
  */
 type HandlerReturn<eventName extends keyof MainEventNames> =
-  IsHandler<eventName> extends true
-  ? Awaited<ReturnType<MainEventNames[eventName]>>
-  : never;
+  IsHandler<eventName> extends true ? Awaited<ReturnType<MainEventNames[eventName]>> : never
 
 /**
  * The complete type for a handler, combining both the parameters and the
@@ -181,34 +177,35 @@ type HandlerReturn<eventName extends keyof MainEventNames> =
  */
 type HandlerType<eventName extends keyof MainEventNames> =
   IsHandler<eventName> extends true
-  ? (...args: HandlerParams<eventName>) => Promise<HandlerReturn<eventName>>
-  : never;
+    ? (...args: HandlerParams<eventName>) => Promise<HandlerReturn<eventName>>
+    : never
 
 interface MainEvents extends EventEmitter {
   emit<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     ...args: Parameters<MainEventNames[eventName]>
-  ): boolean;
+  ): boolean
 
   on<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     listener: (...args: Parameters<MainEventNames[eventName]>) => void
-  ): this;
+  ): this
   once<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     listener: (...args: Parameters<MainEventNames[eventName]>) => void
-  ): this;
+  ): this
   off<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     listener: (...args: Parameters<MainEventNames[eventName]>) => void
-  ): this;
+  ): this
 
   /**
    * Invoke a handler that returns a promise of a result.
    */
   invoke<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends true ? eventName : never,
-    ...args: HandlerParams<eventName>): Promise<HandlerReturn<eventName>>;
+    ...args: HandlerParams<eventName>
+  ): Promise<HandlerReturn<eventName>>
 
   /**
    * Invoke a handler that returns a promise of a result.  Unlike `invoke`, this
@@ -216,7 +213,8 @@ interface MainEvents extends EventEmitter {
    */
   tryInvoke<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends true ? eventName : never,
-    ...args: HandlerParams<eventName>): Promise<HandlerReturn<eventName> | undefined>;
+    ...args: HandlerParams<eventName>
+  ): Promise<HandlerReturn<eventName> | undefined>
 
   /**
    * Register a handler that will handle invoke() callers.  If the given handler
@@ -224,83 +222,85 @@ interface MainEvents extends EventEmitter {
    */
   handle<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends true ? eventName : never,
-    handler: HandlerType<eventName> | undefined,
-  ): void;
+    handler: HandlerType<eventName> | undefined
+  ): void
 }
 
 class MainEventsImpl extends EventEmitter implements MainEvents {
   handlers: {
-    [eventName in keyof MainEventNames]?: IsHandler<eventName> extends true ? HandlerType<eventName> : never;
-  } = {};
+    [eventName in keyof MainEventNames]?: IsHandler<eventName> extends true
+      ? HandlerType<eventName>
+      : never
+  } = {}
 
   emit<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     ...args: Parameters<MainEventNames[eventName]>
-  ): boolean;
+  ): boolean
 
   emit(eventName: string, ...args: any[]): boolean {
-    return super.emit(eventName, ...args);
+    return super.emit(eventName, ...args)
   }
 
   on<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     listener: (...args: Parameters<MainEventNames[eventName]>) => void
-  ): this;
+  ): this
 
   on(eventName: string, listener: (...args: any[]) => void) {
-    return super.on(eventName, listener);
+    return super.on(eventName, listener)
   }
 
   once<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     listener: (...args: Parameters<MainEventNames[eventName]>) => void
-  ): this;
+  ): this
 
   once(eventName: string, listener: (...args: any[]) => void) {
-    return super.once(eventName, listener);
+    return super.once(eventName, listener)
   }
 
   off<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends false ? eventName : never,
     listener: (...args: Parameters<MainEventNames[eventName]>) => void
-  ): this;
+  ): this
 
   off(eventName: string, listener: (...args: any[]) => void) {
-    return super.off(eventName, listener);
+    return super.off(eventName, listener)
   }
 
   async invoke<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends true ? eventName : never,
     ...args: HandlerParams<eventName>
   ): Promise<HandlerReturn<eventName>> {
-    const handler: HandlerType<eventName> | undefined = this.handlers[event] as any;
+    const handler: HandlerType<eventName> | undefined = this.handlers[event] as any
 
     if (handler) {
-      return await handler(...args);
+      return await handler(...args)
     }
-    throw new NoMainEventsHandlerError(event);
+    throw new NoMainEventsHandlerError(event)
   }
 
   async tryInvoke<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends true ? eventName : never,
     ...args: HandlerParams<eventName>
   ): Promise<HandlerReturn<eventName> | undefined> {
-    const handler: HandlerType<eventName> | undefined = this.handlers[event];
+    const handler: HandlerType<eventName> | undefined = this.handlers[event]
 
-    return await handler?.(...args);
+    return await handler?.(...args)
   }
 
   handle<eventName extends keyof MainEventNames>(
     event: IsHandler<eventName> extends true ? eventName : never,
-    handler: HandlerType<eventName> | undefined,
+    handler: HandlerType<eventName> | undefined
   ): void {
     if (handler) {
-      this.handlers[event] = handler as any;
+      this.handlers[event] = handler as any
     } else {
-      delete this.handlers[event];
+      delete this.handlers[event]
     }
   }
 }
-const mainEvents: MainEvents = new MainEventsImpl();
+const mainEvents: MainEvents = new MainEventsImpl()
 
-export default mainEvents;
+export default mainEvents

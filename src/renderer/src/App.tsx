@@ -14,15 +14,20 @@ const router = createBrowserRouter([
   {
     path: '/setup',
     element: <AccountPage />
-  }
+  },
+  // {
+  //   path: '/init',
+  //   element: <SetupPage />
+  // }
 ])
 
 function App(): ReactNode {
-  const { alreadySetup, setAlreadySetup, setNodeStatus, setInstallProgress } = useGlobalStore();
+  const { alreadySetup, setAlreadySetup, setNodeStatus, setInstallProgress } = useGlobalStore()
 
   useEffect(() => {
     window.electron.ipcRenderer.on('subnet-status', (_, value) => {
-      setAlreadySetup(value)
+      console.log('subnet-status value', value)
+      setAlreadySetup(value === 'STARTED')
       setNodeStatus(value)
     })
 
@@ -32,7 +37,17 @@ function App(): ReactNode {
     })
   }, [])
 
-  return <ToastProvider>{alreadySetup ? <RouterProvider router={router} /> : <SetupPage />}</ToastProvider>
+  // return <SetupPage />
+
+  if (!alreadySetup) {
+    return <SetupPage />
+  }
+
+  return (
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
+  )
 }
 
 export default App
