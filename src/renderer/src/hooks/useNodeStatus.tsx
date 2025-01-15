@@ -11,7 +11,6 @@ export const useNodeStatus = () => {
     queryFn: async () => {
       try {
         // if (!nodeURL) return false;
-        // TODO: implement node status API
         const rs = await requestRPC('config_get')
         if (rs.api?.authorizations) return true
         return false
