@@ -21,7 +21,7 @@ const Installation = () => {
       </div>
       {step && (
         <div className="flex w-full mt-12 justify-center items-center gap-4">
-          <Spinner className="loader" color="success" />
+          <Spinner color="success" />
           <div className="body-sm text-white">{step}</div>
         </div>
       )}

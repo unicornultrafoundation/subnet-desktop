@@ -11,18 +11,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#EBFAF5',
-          100: '#D6F5EB',
-          200: '#ADEBD6',
-          300: '#85E0C2',
-          400: '#5CD6AD',
-          500: '#33CC99',
-          600: '#29A37A',
-          700: '#1F7A5C',
-          800: '#14523D',
-          900: '#0A291F'
-        },
+        current: 'currentColor',
+        primary: colors.green,
         secondary: {
           50: '#EBE6FE',
           100: '#D8CEFD',
@@ -85,7 +75,18 @@ export default {
           800: '#991B1B',
           900: '#7F1D1D'
         },
-        green: colors.primary,
+        green: {
+          50: '#EBFAF5',
+          100: '#D6F5EB',
+          200: '#ADEBD6',
+          300: '#85E0C2',
+          400: '#5CD6AD',
+          500: '#33CC99',
+          600: '#29A37A',
+          700: '#1F7A5C',
+          800: '#14523D',
+          900: '#0A291F'
+        },
         purple: colors.secondary,
         cyan: colors.information,
         yellow: colors.warning,
