@@ -17,6 +17,11 @@ import { useAuthStore } from '@renderer/state/auth'
 import { useNodeConfig } from '@renderer/hooks/useNodeConfig'
 // import { useNodeUsage } from '@renderer/hooks/useNodeUsage'
 import LoginForm from './LoginForm'
+// import { useCountRunningApp } from '@renderer/hooks/useCountRunningApp'
+import { useNodeUsage } from '@renderer/hooks/useNodeUsage'
+import { formatBytes } from '@renderer/utils'
+import { hexToBigInt } from 'viem'
+import Footer from '@renderer/components/Footer'
 
 function HomePage() {
   const [isShowPassword, setIsShowPassword] = useState(false)
@@ -24,9 +29,10 @@ function HomePage() {
   const navigate = useNavigate()
   const { data: haveAccount } = useNodeStatus()
   const { data: nodeConfig } = useNodeConfig()
-  // const { data: nodeUsage } = useNodeUsage()
+  const { data: nodeUsage } = useNodeUsage()
+  // const { data: countRunningApp } = useCountRunningApp();
 
-  const { token, nodeStatus } = useGlobalStore()
+  const { token } = useGlobalStore()
   const authStore = useAuthStore()
 
   const nodeEndpoint = useMemo(() => {
@@ -67,7 +73,60 @@ function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               {/* <img src={IcoChart} width={24} height={24} alt='ico-port' /> */}
-              <div className="text-[18px] font-semibold">{nodeStatus}</div>
+              {/* <div className="text-[18px] font-semibold">{nodeStatus}</div> */}
+              <div className="grid grid-cols-2 gap-3 laptop:grid-cols-4">
+                <div className="flex w-full flex-col gap-2">
+                  <div className="text-[10px] font-semibold text-neutral-700">
+                    CPU USAGE
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[12px] laptop:text-base">
+                      {formatBytes(
+                        Number(hexToBigInt(nodeUsage?.usedCpu ?? "0x0")),
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex w-full flex-col gap-2">
+                  <div className="text-[10px] font-semibold text-neutral-700">
+                    GPU USAGE
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[12px] laptop:text-base">
+                      {formatBytes(
+                        Number(hexToBigInt(nodeUsage?.usedGpu ?? "0x0")),
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex w-full flex-col gap-2">
+                  <div className="text-[10px] font-semibold text-neutral-700">
+                    RAM USAGE
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[12px] laptop:text-base">
+                      {formatBytes(
+                        Number(hexToBigInt(nodeUsage?.usedMemory ?? "0x0")),
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex w-full flex-col gap-2">
+                  <div className="text-[10px] font-semibold text-neutral-700">
+                    INTERNET
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[12px] laptop:text-base">
+                      {formatBytes(
+                        Number(
+                          hexToBigInt(nodeUsage?.usedDownloadBytes ?? "0x0") +
+                            hexToBigInt(nodeUsage?.usedUploadBytes ?? "0x0"),
+                        ),
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -110,12 +169,16 @@ function HomePage() {
           </>
         )}
       </div>
-      <div className="w-full flex items-center py-6 px-10 absolute bottom-0">
+      {/* <Footer /> */}
+      <div className="w-full flex flex-col items-center justify-center py-6 absolute bottom-0">
         {!haveAccount && (
-          <Button onClick={() => navigate('/setup')} type="primary" className="w-full !py-4">
-            <span className="font-semibold text-[14px] tracking-[1px]">SETUP ACCOUNT</span>
-          </Button>
+          <div className='px-10'>
+            <Button onClick={() => navigate('/setup')} type="primary" className="w-full !py-4">
+              <span className="font-semibold text-[14px] tracking-[1px]">SETUP ACCOUNT</span>
+            </Button>
+          </div>
         )}
+        <Footer />
       </div>
     </main>
   )
