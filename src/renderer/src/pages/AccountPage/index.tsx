@@ -9,12 +9,18 @@ export default function AccountPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [validationErr, setValidationErr] = useState('')
 
-  const { mutate: setupNode, isPending } = useSetupNode()
+  const { mutate: setupNode, isPending, error } = useSetupNode()
   const navigate = useNavigate()
 
   const handleSetupNode = async () => {
-    // TODO: validate password confirm
+    setValidationErr('')
+    if (confirmPassword !== password) {
+      setValidationErr('Confirm password incorrect')
+      return;
+    }
+
     setupNode({ username, password })
     navigate('/')
   }
@@ -59,6 +65,12 @@ export default function AccountPage() {
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            color={error || validationErr ? 'error' : undefined}
+            helperText={
+              error && (
+                <span className="font-medium text-error-500">{error.message || validationErr}</span>
+              )
+            }
           />
         </div>
         <Button isProcessing={isPending} type="primary" onClick={handleSetupNode}>

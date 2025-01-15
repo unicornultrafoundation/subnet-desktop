@@ -12,7 +12,6 @@ export const useSetupNode = (onSuccess?: () => void, onError?: () => void) => {
     mutationFn: async ({ username, password }: NodeAuth) => {
       // if (!nodeURL) throw new Error("Node URL not found");
       try {
-        // TODO: implement setup node API
         const result = await requestRPC('config_update', [
           {
             api: {
