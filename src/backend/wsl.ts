@@ -40,6 +40,7 @@ import {
   updateSubnetConfig as updateSubnetConfigUtil,
   checkStatus as checkStatusUtil
 } from '../utils/subnet'
+import { sleep } from '../main/utils/promise'
 
 /** Number of times to retry converting a path between WSL & Windows. */
 const WSL_PATH_CONVERT_RETRIES = 10
@@ -373,11 +374,79 @@ options = metadata
 [network]
 generateHosts = true
 generateResolvConf = true
+[wsl2]
+networkingMode=mirrored
 `
     await this.writeFile('/etc/wsl.conf', wslConfContent, 0o755)
   }
 
+  /**
+   * Install WSL 2 on the system if not already installed.
+   */
+  protected async installWSL2() {
+    const wslConfigPath = path.join(os.homedir(), '.wslconfig');
+    try {
+      await fs.promises.access(wslConfigPath);
+      console.log('.wslconfig file already exists. Skipping WSL installation.');
+      return;
+    } catch {
+      console.log('.wslconfig file does not exist. Proceeding with WSL installation.');
+    }
+
+    await this.progressTracker.action('Checking WSL installation', 10, async () => {
+      // Enable Windows Subsystem for Linux with admin privileges
+      await this.progressTracker.action('Enabling Windows Subsystem for Linux', 20, async () => {
+        await new Promise<void>((resolve, reject) => {
+          const command = `powershell.exe -Command "Start-Process powershell.exe -ArgumentList \\"dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart; dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart; Set-NetFirewallHyperVVMSetting -Name '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -DefaultInboundAction Allow\\" -Verb RunAs"`
+          childProcess.exec(command, (error, stdout, stderr) => {
+            if (error) {
+              reject(stderr)
+              console.error(`Error: ${error.message}`);
+              return;
+            }
+            if (stderr) {
+              reject(stderr)
+              console.error(`Stderr: ${stderr}`);
+              return;
+            }
+            console.log(`Output: ${stdout}`);
+            resolve();
+          });
+        })
+      })
+
+      // Update WSL if available but not installed
+      await this.progressTracker.action('Installing WSL', 50, async () => {
+        await this.execWSL("--install")
+        await this.execWSL("--set-default-version", "2")
+        await this.execWSL('--update');
+      })
+    })
+  }
+
+  /**
+   * Configure WSL and set firewall settings before installation.
+   */
+  protected async configureWSL() {
+    await this.progressTracker.action('Configuring WSL', 50, async () => {
+      await this.installWSL2() // Call the new method here
+
+      const wslConfigContent = `
+[wsl2]
+networkingMode=mirrored
+`
+      const wslConfigPath = path.join(os.homedir(), '.wslconfig')
+      await fs.promises.writeFile(wslConfigPath, wslConfigContent, 'utf-8')
+
+
+      // Shut down WSL to apply the configuration
+      const shutdownWSLCommand = `wsl --shutdown`
+      await childProcess.spawn('powershell.exe', ['-Command', shutdownWSLCommand], { stdio: 'inherit' })
+    })
+  }
+
   async start(config_: BackendSettings): Promise<void> {
+    await this.configureWSL() // Call the new method here
     const config = (this.cfg = _.defaultsDeep(clone(config_), {
       containerEngine: { name: ContainerEngine.CONTAINERD }
     }))
@@ -516,7 +585,7 @@ generateResolvConf = true
             break
         }
         // Do not await on this, as we don't want to wait until the proxy exits.
-        this.runWslProxy().catch(console.error)
+        //this.runWslProxy().catch(console.error)
         await this.progressTracker.action(
           'Waiting for container engine to be ready',
           0,
@@ -528,6 +597,9 @@ generateResolvConf = true
           100,
           this.execCommand('/sbin/rc-service', 'subnet', 'start')
         )
+
+        await sleep(1000)
+
         await this.progressTracker.action(
           'Update Subnet Configuration',
           100,
