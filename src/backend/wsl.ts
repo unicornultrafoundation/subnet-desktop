@@ -440,8 +440,7 @@ networkingMode=mirrored
 
 
       // Shut down WSL to apply the configuration
-      const shutdownWSLCommand = `wsl --shutdown`
-      await childProcess.spawn('powershell.exe', ['-Command', shutdownWSLCommand], { stdio: 'inherit' })
+      await this.execWSL('--shutdown');
     })
   }
 
