@@ -168,15 +168,23 @@ function finishConfiguringSettings(
 }
 
 export function getDefaultMemory() {
-  if (os.platform() === 'darwin' || os.platform() === 'linux') {
-    const totalMemoryInGB = os.totalmem() / 2 ** 30
+  const totalMemoryInGB = os.totalmem() / 2 ** 30
 
-    // 25% of available ram up to a maximum of 6gb
-    return Math.min(6, Math.round(totalMemoryInGB / 4.0))
-  } else {
-    return 2
-  }
+  // 25% of available ram up to a maximum of 6gb
+  return Math.round(totalMemoryInGB / 2.0)
 }
+
+/**
+ * Get the default number of CPUs.
+ * @returns The default number of CPUs.
+ */
+export function getDefaultCPUs() {
+  const totalCPUs = os.cpus().length
+
+  // Use half of the available CPUs, with a minimum of 1
+  return Math.max(1, Math.floor(totalCPUs / 2))
+}
+
 /**
  * Merge settings in-place with changes, returning the merged settings.
  * @param cfg Baseline settings.  This will be modified.

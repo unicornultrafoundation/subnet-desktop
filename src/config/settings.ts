@@ -84,8 +84,8 @@ export const defaultSettings = {
     name: ContainerEngine.CONTAINERD
   },
   virtualMachine: {
-    memoryInGB: 2,
-    numberCPUs: 2
+    memoryInGB: 4,
+    numberCPUs: 4
   },
   WSL: { integrations: {} as Record<string, boolean> },
   kubernetes: {

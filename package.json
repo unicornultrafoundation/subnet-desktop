@@ -20,7 +20,7 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
     "sign": "node scripts/ts-wrapper.js scripts/sign.ts",
     "wix": "node scripts/ts-wrapper.js scripts/wix.ts"
   },
