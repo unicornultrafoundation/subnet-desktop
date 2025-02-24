@@ -22,7 +22,7 @@
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux"
     "sign": "node scripts/ts-wrapper.js scripts/sign.ts",
-    "wix": "node scripts/ts-wrapper.js scripts/wix.ts",
+    "wix": "node scripts/ts-wrapper.js scripts/wix.ts"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
