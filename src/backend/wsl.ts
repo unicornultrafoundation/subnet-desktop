@@ -41,6 +41,7 @@ import {
   checkStatus as checkStatusUtil
 } from '../utils/subnet'
 import { sleep } from '../main/utils/promise'
+import { dialog } from 'electron' // Add this import
 
 /** Number of times to retry converting a path between WSL & Windows. */
 const WSL_PATH_CONVERT_RETRIES = 10
@@ -429,18 +430,28 @@ networkingMode=mirrored
    */
   protected async configureWSL() {
     await this.progressTracker.action('Configuring WSL', 50, async () => {
-      await this.installWSL2() // Call the new method here
+      try {
+        await this.installWSL2() // Call the new method here
 
-      const wslConfigContent = `
-[wsl2]
-networkingMode=mirrored
-`
-      const wslConfigPath = path.join(os.homedir(), '.wslconfig')
-      await fs.promises.writeFile(wslConfigPath, wslConfigContent, 'utf-8')
-
-
-      // Shut down WSL to apply the configuration
-      await this.execWSL('--shutdown');
+        const wslConfigContent = `
+  [wsl2]
+  networkingMode=mirrored
+  `
+        const wslConfigPath = path.join(os.homedir(), '.wslconfig')
+        await fs.promises.writeFile(wslConfigPath, wslConfigContent, 'utf-8')
+  
+  
+        // Shut down WSL to apply the configuration
+        await this.execWSL('--shutdown');  
+      } catch (err) {
+        dialog.showMessageBoxSync({
+          type: 'info',
+          buttons: ['OK'],
+          title: 'Restart Required',
+          message: 'An error occurred during the WSL configuration. Please restart your computer to complete the WSL installation.'
+        });
+        throw new Error('WSL configuration failed. Restart required.');
+      }
     })
   }
 
