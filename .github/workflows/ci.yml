@@ -26,18 +26,11 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: 🛠 Install Snapcraft (Ubuntu only)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y snapd
-          sudo snap install snapcraft --classic
-
       - name: 🔨 Build Electron App
         run: yarn build
 
       - name: 📦 Package App
-        run: yarn electron-builder --publish=always
+        run: yarn electron-builder --publish=never
 
       - name: 📤 Upload Artifacts
         uses: actions/upload-artifact@v4
