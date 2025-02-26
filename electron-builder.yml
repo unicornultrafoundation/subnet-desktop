@@ -1,5 +1,5 @@
 appId: com.u2u.subnet
-productName: subnet-desktop
+productName: Subnet Desktop
 directories:
   buildResources: build
 files:
