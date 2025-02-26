@@ -107,7 +107,7 @@ function getPaths(): Paths {
   let resourcesPath: string
   // If we are running as a script (i.e. yarn postinstall), electron.app is undefined
   if (electron.app?.isPackaged) {
-    resourcesPath = path.join(process.resourcesPath, 'app.asar.unpacked')
+    resourcesPath = process.resourcesPath
   } else {
     resourcesPath = electron.app?.getAppPath() || ''
   }
