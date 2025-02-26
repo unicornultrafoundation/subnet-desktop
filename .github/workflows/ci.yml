@@ -26,6 +26,13 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: 🛠 Install Snapcraft (Ubuntu only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y snapd
+          sudo snap install snapcraft --classic
+
       - name: 🔨 Build Electron App
         run: yarn build
 
