@@ -571,7 +571,8 @@ networkingMode=mirrored
         await this.progressTracker.action(
           'Starting container engine',
           0,
-          this.startService('containerd')
+
+          this.execCommand('/sbin/rc-service', 'containerd', 'start')
         )
         switch (config.containerEngine.name) {
           case ContainerEngine.CONTAINERD:
@@ -715,17 +716,8 @@ networkingMode=mirrored
 
       await this.progressTracker.action('Shutting Down...', 10, async () => {
         if (await this.isDistroRegistered({ runningOnly: true })) {
-          const services = ['containerd']
-
-          for (const service of services) {
-            try {
-              await this.stopService(service)
-            } catch (ex) {
-              // Do not allow errors here to prevent us from stopping.
-              console.error(`Failed to stop service ${service}:`, ex)
-            }
-          }
           try {
+            await this.execCommand('/sbin/rc-service', 'containerd', 'stop')
             await this.execCommand('/sbin/rc-service', 'subnet', 'stop')
             await this.stopService('local')
           } catch (ex) {
