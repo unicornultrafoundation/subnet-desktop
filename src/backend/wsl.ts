@@ -51,6 +51,8 @@ const WSL_PATH_CONVERT_RETRIES = 10
  */
 const DISTRO_DATA_DIRS = ['/var/lib']
 
+const SUBNET_NODE_DATA= "/var/lib/subnet-node"
+
 /** The version of the WSL distro we expect. */
 
 const DISTRO_VERSION = DEPENDENCY_VERSIONS.WSLDistro
@@ -610,10 +612,9 @@ networkingMode=mirrored
         )
 
         
-
+        await sleep(2000)
         const subnetConfig = await this.getSubnetConfig()
-        if (!subnetConfig.provider.enable) {
-          await sleep(5000)
+        if (!subnetConfig?.provider?.enable) {
           await this.progressTracker.action(
             'Update Subnet Configuration',
             100,
@@ -1252,24 +1253,12 @@ networkingMode=mirrored
    * @precondition The distribution is already registered.
    */
   protected async upgradeDistroAsNeeded() {
-    let existingVersion = await this.getDistroVersion()
-
-    if (!semver.valid(existingVersion, true)) {
-      existingVersion += '.0'
-    }
-    let desiredVersion = DISTRO_VERSION
-
-    if (!semver.valid(desiredVersion, true)) {
-      desiredVersion += '.0'
-    }
-    if (semver.lt(existingVersion, desiredVersion, true)) {
-      // Make sure we copy the data over before we delete the old distro
-      await this.progressTracker.action('Upgrading WSL distribution', 100, async () => {
-        await this.initDataDistribution()
-        await this.execWSL('--unregister', INSTANCE_NAME)
-        await this.ensureDistroRegistered()
-      })
-    }
+    // Make sure we copy the data over before we delete the old distro
+    await this.progressTracker.action('Upgrading WSL distribution', 100, async () => {
+      await this.initDataDistribution()
+      await this.execWSL('--unregister', INSTANCE_NAME)
+      await this.ensureDistroRegistered()
+    })
   }
 
   /**
@@ -1674,7 +1663,7 @@ networkingMode=mirrored
    * Read the subnet configuration from /root/.subnet-node/config.yaml
    */
   async getSubnetConfig(): Promise<any> {
-    const configPath = '/root/.subnet-node/config.yaml'
+    const configPath = SUBNET_NODE_DATA + '/config.yaml'
     const configContent = await this.readFile(configPath)
     return yaml.parse(configContent)
   }

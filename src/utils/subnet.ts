@@ -4,7 +4,7 @@ import { merge } from 'lodash'
 import axios from 'axios'
 
 /**
- * Update the subnet configuration in /root/.subnet-node/config.yaml
+ * Update the subnet configuration in /var/lib/subnet-node/config.yaml
  * @param readFile Function to read a file from the VM
  * @param writeFile Function to write a file to the VM
  * @param execCommand Function to execute a command in the VM
@@ -16,7 +16,7 @@ export async function updateSubnetConfig(
   _execCommand: (...command: string[]) => Promise<void>,
   newConfig: any
 ): Promise<void> {
-  const configPath = '/root/.subnet-node/config.yaml'
+  const configPath = '/var/lib/subnet-node/config.yaml'
   const configContent = await readFile(configPath)
   const existingConfig = yaml.parse(configContent)
   const mergedConfig = merge({}, existingConfig, newConfig)

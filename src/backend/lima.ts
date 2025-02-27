@@ -42,6 +42,7 @@ import {
   checkStatus as checkStatusUtil
 } from '../utils/subnet'
 import log from 'electron-log/main';
+import { sleep } from '../main/utils/promise'
 
 export const MACHINE_NAME = '0'
 const console = Logging.lima
@@ -859,6 +860,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         await this.progressTracker.action('Installing Subnet', 100, this.installSubnet())
         await this.progressTracker.action('Starting Subnet', 100, this.startService('subnet'))
 
+        await sleep(1000)
         const subnetConfig = await this.getSubnetConfig()
         if (!subnetConfig?.provider?.enable) {
           await this.progressTracker.action(

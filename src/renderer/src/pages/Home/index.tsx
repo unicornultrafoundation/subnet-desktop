@@ -41,7 +41,7 @@ function HomePage() {
     if (!apiEndpoint) return ''
 
     const [_, __, ipAddress, ___, port] = apiEndpoint.split('/')
-    return `${ipAddress}:${port}`
+    return `http://${ipAddress}:${port}`
   }, [nodeConfig])
 
   if (!token) {
