@@ -6,6 +6,8 @@ import VmFactory from '../backend/factory'
 import * as settings from '../config/settings'
 import * as settingsImpl from '../config/settingsImpl'
 import { setLogLevel } from '../utils/logging'
+import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
+import log from 'electron-log'
 
 let cfg: settings.Settings
 let deploymentProfiles: settings.DeploymentProfileType = { defaults: {}, locked: {} }
@@ -134,6 +136,15 @@ app.whenReady().then(async () => {
   }
 
   await startBackend()
+})
+
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.ElectronPublicUpdateService,
+    repo: 'unicornultrafoundation/subnet-desktop'
+  },
+  updateInterval: '1 hour',
+  logger: log
 })
 
 app.on('window-all-closed', async () => {
