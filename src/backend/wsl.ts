@@ -619,10 +619,9 @@ networkingMode=mirrored
             100,
             this.updateSubnetConfig({ provider: { enable: true } })
           )
-        } else {
-          const isOnline = await checkStatusUtil()
-          console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
         }
+        const isOnline = await checkStatusUtil()
+        console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
         await this.setState(State.STARTED)
       } catch (ex) {
         await this.setState(State.ERROR)
@@ -1693,8 +1692,6 @@ networkingMode=mirrored
       newConfig
     )
     await this.execCommand('/sbin/rc-service', 'subnet', 'restart')
-    const isOnline = await checkStatusUtil()
-    console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
   }
 
   // #region Events
@@ -1710,5 +1707,9 @@ networkingMode=mirrored
     event: eventName
   ): BackendEvents[eventName][] {
     return super.rawListeners(event) as BackendEvents[eventName][]
+  }
+
+  async checkSubnetNodeOnline() {
+    await this.progressTracker.action('Checking Subnet Node status', 100,  checkStatusUtil())
   }
 }
