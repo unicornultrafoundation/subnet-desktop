@@ -11,7 +11,7 @@ export class Subnet implements Dependency {
   async download(context: DownloadContext): Promise<void> {
     const version = context.versions.subnet
     const arch = context.isM1 ? 'arm64' : 'amd64'
-    const baseUrl = `https://github.com/${this.githubOwner}/${this.githubRepo}/releases/download/v${version}`
+    const baseUrl = `https://github.com/${this.githubOwner}/${this.githubRepo}/releases/download/${version}`
     const executableName = `subnet-${version}-linux-${arch}`
     const url = `${baseUrl}/${executableName}`
     await download(url, path.join(context.resourcesDir, 'linux', 'internal', 'subnet'))
