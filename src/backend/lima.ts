@@ -858,12 +858,16 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
         await this.progressTracker.action('Installing Subnet', 100, this.installSubnet())
         await this.progressTracker.action('Starting Subnet', 100, this.startService('subnet'))
-        await this.progressTracker.action(
-          'Update Subnet',
-          100,
-          this.updateSubnetConfig({ provider: { enable: true } })
-        )
 
+        const subnetConfig = await this.getSubnetConfig()
+        if (!subnetConfig?.provider?.enable) {
+          await this.progressTracker.action(
+            'Update Subnet',
+            100,
+            this.updateSubnetConfig({ provider: { enable: true } })
+          )
+        }
+        await this.checkSubnetNodeOnline()
         await this.setState(State.STARTED)
       } catch (err) {
         console.error('Error starting lima:', err)
@@ -1508,7 +1512,10 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
       newConfig
     )
     await this.execCommand({ root: true }, '/sbin/rc-service', 'subnet', 'restart')
-    const isOnline = await checkStatusUtil()
-    console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
+  }
+  
+
+  async checkSubnetNodeOnline() {
+    await this.progressTracker.action('Checking Subnet Node status', 100,  checkStatusUtil())
   }
 }
