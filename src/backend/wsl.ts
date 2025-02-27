@@ -620,8 +620,7 @@ networkingMode=mirrored
             this.updateSubnetConfig({ provider: { enable: true } })
           )
         }
-        const isOnline = await checkStatusUtil()
-        console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
+        await this.checkSubnetNodeOnline()
         await this.setState(State.STARTED)
       } catch (ex) {
         await this.setState(State.ERROR)
