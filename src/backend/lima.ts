@@ -862,6 +862,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
         await sleep(1000)
         const subnetConfig = await this.getSubnetConfig()
+        console.log(subnetConfig?.provider?.enable)
         if (!subnetConfig?.provider?.enable) {
           await this.progressTracker.action(
             'Update Subnet',
@@ -1494,16 +1495,16 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
   }
 
   /**
-   * Read the subnet configuration from /root/.subnet-node/config.yaml
+   * Read the subnet configuration from /var/lib/subnet-node/config.yaml
    */
   async getSubnetConfig(): Promise<any> {
-    const configPath = '/root/.subnet-node/config.yaml'
+    const configPath = '/var/lib/subnet-node/config.yaml'
     const configContent = await this.readFile(configPath)
     return yaml.parse(configContent)
   }
 
   /**
-   * Update the subnet configuration in /root/.subnet-node/config.yaml
+   * Update the subnet configuration in /var/lib/subnet-node/config.yaml
    * @param newConfig The new configuration to be merged and written.
    */
   async updateSubnetConfig(newConfig: any): Promise<void> {
