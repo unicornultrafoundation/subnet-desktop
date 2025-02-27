@@ -609,14 +609,20 @@ networkingMode=mirrored
           this.execCommand('/sbin/rc-service', 'subnet', 'start')
         )
 
-        await sleep(1000)
+        
 
-        await this.progressTracker.action(
-          'Update Subnet Configuration',
-          100,
-          this.updateSubnetConfig({ provider: { enable: true } })
-        )
-
+        const subnetConfig = await this.getSubnetConfig()
+        if (!subnetConfig.provider.enable) {
+          await sleep(5000)
+          await this.progressTracker.action(
+            'Update Subnet Configuration',
+            100,
+            this.updateSubnetConfig({ provider: { enable: true } })
+          )
+        } else {
+          const isOnline = await checkStatusUtil()
+          console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
+        }
         await this.setState(State.STARTED)
       } catch (ex) {
         await this.setState(State.ERROR)
