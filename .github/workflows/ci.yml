@@ -31,6 +31,9 @@ jobs:
 
       - name: 📦 Package App
         run: yarn electron-builder --publish=never
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
 
       - name: 📤 Upload Artifacts
         uses: actions/upload-artifact@v4
