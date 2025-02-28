@@ -30,7 +30,7 @@ jobs:
         run: yarn build
 
       - name: 📦 Package App
-        run: yarn electron-builder --publish=always
+        run: yarn electron-builder --publish=never
 
       - name: 📤 Upload Artifacts
         uses: actions/upload-artifact@v4

@@ -42,6 +42,7 @@ import {
   checkStatus as checkStatusUtil
 } from '../utils/subnet'
 import log from 'electron-log/main';
+import { sleep } from '../main/utils/promise'
 
 export const MACHINE_NAME = '0'
 const console = Logging.lima
@@ -858,12 +859,18 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
         await this.progressTracker.action('Installing Subnet', 100, this.installSubnet())
         await this.progressTracker.action('Starting Subnet', 100, this.startService('subnet'))
-        await this.progressTracker.action(
-          'Update Subnet',
-          100,
-          this.updateSubnetConfig({ provider: { enable: true } })
-        )
 
+        await sleep(1000)
+        const subnetConfig = await this.getSubnetConfig()
+        console.log(subnetConfig?.provider?.enable)
+        if (!subnetConfig?.provider?.enable) {
+          await this.progressTracker.action(
+            'Update Subnet',
+            100,
+            this.updateSubnetConfig({ provider: { enable: true } })
+          )
+        }
+        await this.checkSubnetNodeOnline()
         await this.setState(State.STARTED)
       } catch (err) {
         console.error('Error starting lima:', err)
@@ -1488,16 +1495,16 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
   }
 
   /**
-   * Read the subnet configuration from /root/.subnet-node/config.yaml
+   * Read the subnet configuration from /var/lib/subnet-node/config.yaml
    */
   async getSubnetConfig(): Promise<any> {
-    const configPath = '/root/.subnet-node/config.yaml'
+    const configPath = '/var/lib/subnet-node/config.yaml'
     const configContent = await this.readFile(configPath)
     return yaml.parse(configContent)
   }
 
   /**
-   * Update the subnet configuration in /root/.subnet-node/config.yaml
+   * Update the subnet configuration in /var/lib/subnet-node/config.yaml
    * @param newConfig The new configuration to be merged and written.
    */
   async updateSubnetConfig(newConfig: any): Promise<void> {
@@ -1508,7 +1515,10 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
       newConfig
     )
     await this.execCommand({ root: true }, '/sbin/rc-service', 'subnet', 'restart')
-    const isOnline = await checkStatusUtil()
-    console.log(`Subnet service is ${isOnline ? 'online' : 'offline'}`)
+  }
+  
+
+  async checkSubnetNodeOnline() {
+    await this.progressTracker.action('Checking Subnet Node status', 100,  checkStatusUtil())
   }
 }

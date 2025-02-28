@@ -1,6 +1,6 @@
 {
   "name": "subnet-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "U2U subnet client",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -45,6 +45,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.0.2",
     "sass": "^1.83.0",
+    "update-electron-app": "^3.1.1",
     "viem": "^2.21.55",
     "wagmi": "^2.14.3",
     "winreg": "^1.2.5",

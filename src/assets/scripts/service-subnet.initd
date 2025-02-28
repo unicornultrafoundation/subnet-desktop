@@ -25,7 +25,7 @@ start_pre() {
 supervisor=supervise-daemon
 name=subnet
 command=/usr/local/bin/subnet
-command_args="${ADDITIONAL_ARGS:-}"
+command_args="--datadir /var/lib/subnet-node"
 
 # Logging configuration
 SUBNET_LOGFILE="${SUBNET_LOGFILE:-/var/log/subnet.log}"
