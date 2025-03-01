@@ -198,6 +198,11 @@ export interface VMBackend extends EventEmitter<BackendEvents> {
    * @param newConfig The new configuration to be merged and written.
    */
   updateSubnetConfig(newConfig: any): Promise<void>
+
+  readFile: Function
+  execCommand: Function
+  writeFile: Function
+  copyFileIn: Function
 }
 
 /**

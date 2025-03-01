@@ -26,7 +26,6 @@ import DEPENDENCY_VERSIONS from '../assets/dependencies.yaml'
 import { defined, RecursivePartial } from '../utils/typeUtils'
 import _, { clone } from 'lodash'
 import { ContainerEngineClient } from './containerClient/types'
-import semver from 'semver'
 import SCRIPT_DATA_WSL_CONF from '../assets/scripts/wsl-data.conf?raw'
 import WSL_INIT_SCRIPT from '../assets/scripts/wsl-init?raw'
 import { ContainerEngine } from '../config/settings'
@@ -34,14 +33,9 @@ import { NerdctlClient } from './containerClient/nerdctlClient'
 import WSL_EXEC from '../assets/scripts/wsl-exec?raw'
 import NERDCTL from '../assets/scripts/nerdctl?raw'
 import BackgroundProcess from '../utils/backgroundProcess'
-import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
 import yaml from 'yaml'
-import {
-  updateSubnetConfig as updateSubnetConfigUtil,
-  checkStatus as checkStatusUtil
-} from '../utils/subnet'
-import { sleep } from '../main/utils/promise'
 import { dialog } from 'electron' // Add this import
+import SubnetNode from './subnetNode';
 
 /** Number of times to retry converting a path between WSL & Windows. */
 const WSL_PATH_CONVERT_RETRIES = 10
@@ -51,7 +45,7 @@ const WSL_PATH_CONVERT_RETRIES = 10
  */
 const DISTRO_DATA_DIRS = ['/var/lib']
 
-const SUBNET_NODE_DATA= "/var/lib/subnet-node"
+const SUBNET_NODE_DATA = "/var/lib/subnet-node"
 
 /** The version of the WSL distro we expect. */
 
@@ -150,6 +144,7 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
   }
 
   hostSwitchProcess: BackgroundProcess
+  subnetNode: SubnetNode;
 
   constructor(_arch: Architecture) {
     super()
@@ -172,6 +167,8 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
       shouldRun: () =>
         Promise.resolve([State.STARTING, State.STARTED, State.DISABLED].includes(this.state))
     })
+    this.subnetNode = new SubnetNode(this, console);
+    this.subnetNode.startPeriodicCheck(); // Start the periodic check
   }
 
   protected async setState(state: State) {
@@ -441,10 +438,10 @@ networkingMode=mirrored
   `
         const wslConfigPath = path.join(os.homedir(), '.wslconfig')
         await fs.promises.writeFile(wslConfigPath, wslConfigContent, 'utf-8')
-  
-  
+
+
         // Shut down WSL to apply the configuration
-        await this.execWSL('--shutdown');  
+        await this.execWSL('--shutdown');
       } catch (err) {
         dialog.showMessageBoxSync({
           type: 'info',
@@ -604,15 +601,9 @@ networkingMode=mirrored
           0,
           this.containerEngineClient.waitForReady()
         )
-        await this.progressTracker.action('Installing Subnet', 100, this.installSubnet())
-        await this.progressTracker.action(
-          'Starting Subnet',
-          100,
-          this.execCommand('/sbin/rc-service', 'subnet', 'start')
-        )
 
-        
-        await sleep(2000)
+        await this.progressTracker.action('Installing Subnet', 100, this.subnetNode.start())
+        await this.checkSubnetNodeOnline()
         const subnetConfig = await this.getSubnetConfig()
         if (!subnetConfig?.provider?.enable) {
           await this.progressTracker.action(
@@ -620,8 +611,8 @@ networkingMode=mirrored
             100,
             this.updateSubnetConfig({ provider: { enable: true } })
           )
+          await this.checkSubnetNodeOnline()
         }
-        await this.checkSubnetNodeOnline()
         await this.setState(State.STARTED)
       } catch (ex) {
         await this.setState(State.ERROR)
@@ -630,10 +621,6 @@ networkingMode=mirrored
         this.currentAction = Action.NONE
       }
     })
-  }
-
-  protected async installSubnet() {
-    await this.writeFile('/etc/init.d/subnet', SERVICE_SUBNET, 0o755)
   }
 
   /**
@@ -1673,13 +1660,7 @@ networkingMode=mirrored
    * @param newConfig The new configuration to be merged and written.
    */
   async updateSubnetConfig(newConfig: any): Promise<void> {
-    await updateSubnetConfigUtil(
-      this.readFile.bind(this),
-      this.writeFile.bind(this),
-      this.execCommand.bind(this),
-      newConfig
-    )
-    await this.execCommand('/sbin/rc-service', 'subnet', 'restart')
+    return this.subnetNode.updateConfig(newConfig);
   }
 
   // #region Events
@@ -1698,6 +1679,6 @@ networkingMode=mirrored
   }
 
   async checkSubnetNodeOnline() {
-    await this.progressTracker.action('Checking Subnet Node status', 100,  checkStatusUtil())
+    await this.progressTracker.action('Checking Subnet Node status', 100, this.subnetNode.checkStatus())
   }
 }
