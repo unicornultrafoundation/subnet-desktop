@@ -14,7 +14,6 @@ import { AlpineLimaISO, Lima, Qemu, SocketVMNet } from './dependencies/lima'
 import { WSLDistro } from './dependencies/wsl'
 import { Wix } from './dependencies/wix'
 import { WSLDistroImage } from './dependencies/tar-archives'
-import { Subnet } from './dependencies/subnet'
 import * as goUtils from './dependencies/go-source'
 
 type DependencyWithContext = {
@@ -56,7 +55,7 @@ const wslDependencies: Dependency[] = [
 ]
 
 // Dependencies that are specific to WSL and Lima VMs.
-const vmDependencies: Dependency[] = [new Subnet()]
+const vmDependencies: Dependency[] = []
 
 // Dependencies that are specific to hosts.
 const hostDependencies: Dependency[] = []

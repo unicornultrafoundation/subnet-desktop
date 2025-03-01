@@ -35,14 +35,10 @@ import { NerdctlClient } from './containerClient/nerdctlClient'
 import stream from 'stream'
 import tar from 'tar-stream'
 import NETWORKS_CONFIG from '../assets/networks-config.yaml'
-import SERVICE_SUBNET from '../assets/scripts/service-subnet.initd?raw'
 import { app } from 'electron'
-import {
-  updateSubnetConfig as updateSubnetConfigUtil,
-  checkStatus as checkStatusUtil
-} from '../utils/subnet'
 import log from 'electron-log/main';
-import { sleep } from '../main/utils/promise'
+
+import SubnetNode from './subnetNode';
 
 export const MACHINE_NAME = '0'
 const console = Logging.lima
@@ -251,6 +247,8 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
   arch: Architecture
 
+  subnetNode: SubnetNode;
+
   constructor(arch: Architecture) {
     super()
     this.arch = arch
@@ -258,6 +256,9 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
       this.progress = progress
       this.emit('progress')
     }, console)
+
+    this.subnetNode = new SubnetNode(this, console);
+    this.subnetNode.startPeriodicCheck(); // Start the periodic check
   }
   get cpus(): Promise<number> {
     // This doesn't make sense for WSL2, since that's a global configuration.
@@ -857,20 +858,19 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         this.#containerEngineClient = new NerdctlClient(this)
         await this.#containerEngineClient?.waitForReady()
 
-        await this.progressTracker.action('Installing Subnet', 100, this.installSubnet())
-        await this.progressTracker.action('Starting Subnet', 100, this.startService('subnet'))
+        await this.progressTracker.action("Installing Subnet Node", 100, this.subnetNode.start())
+        await this.checkSubnetNodeOnline()
 
-        await sleep(1000)
         const subnetConfig = await this.getSubnetConfig()
-        console.log(subnetConfig?.provider?.enable)
         if (!subnetConfig?.provider?.enable) {
           await this.progressTracker.action(
             'Update Subnet',
             100,
             this.updateSubnetConfig({ provider: { enable: true } })
           )
+          await this.checkSubnetNodeOnline()
         }
-        await this.checkSubnetNodeOnline()
+       
         await this.setState(State.STARTED)
       } catch (err) {
         console.error('Error starting lima:', err)
@@ -886,13 +886,6 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         this.currentAction = Action.NONE
       }
     })
-  }
-
-  protected async installSubnet() {
-    const subnetPath = path.join(paths.resources, 'linux', 'internal', 'subnet')
-    await this.lima('copy', subnetPath, `${MACHINE_NAME}:./subnet`)
-    await this.execCommand({ root: true }, 'mv', './subnet', '/usr/local/bin/subnet')
-    await this.writeFile('/etc/init.d/subnet', SERVICE_SUBNET, 0o755)
   }
 
   /**
@@ -1498,27 +1491,15 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
    * Read the subnet configuration from /var/lib/subnet-node/config.yaml
    */
   async getSubnetConfig(): Promise<any> {
-    const configPath = '/var/lib/subnet-node/config.yaml'
-    const configContent = await this.readFile(configPath)
-    return yaml.parse(configContent)
+    return this.subnetNode.getConfig()
   }
 
-  /**
-   * Update the subnet configuration in /var/lib/subnet-node/config.yaml
-   * @param newConfig The new configuration to be merged and written.
-   */
   async updateSubnetConfig(newConfig: any): Promise<void> {
-    await updateSubnetConfigUtil(
-      this.readFile.bind(this),
-      this.writeFile.bind(this),
-      this.execCommand.bind(this),
-      newConfig
-    )
-    await this.execCommand({ root: true }, '/sbin/rc-service', 'subnet', 'restart')
+    return this.subnetNode.updateConfig(newConfig)
   }
-  
 
   async checkSubnetNodeOnline() {
-    await this.progressTracker.action('Checking Subnet Node status', 100,  checkStatusUtil())
+    await this.progressTracker.action('Checking Subnet Node status', 100,  this.subnetNode.checkStatus())
   }
+
 }
