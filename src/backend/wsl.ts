@@ -36,6 +36,7 @@ import BackgroundProcess from '../utils/backgroundProcess'
 import yaml from 'yaml'
 import { dialog } from 'electron' // Add this import
 import SubnetNode from './subnetNode';
+import semver from 'semver';
 
 /** Number of times to retry converting a path between WSL & Windows. */
 const WSL_PATH_CONVERT_RETRIES = 10
@@ -1239,13 +1240,30 @@ networkingMode=mirrored
    * version if it is too old.
    * @precondition The distribution is already registered.
    */
-  protected async upgradeDistroAsNeeded() {
-    // Make sure we copy the data over before we delete the old distro
-    await this.progressTracker.action('Upgrading WSL distribution', 100, async () => {
-      await this.initDataDistribution()
-      await this.execWSL('--unregister', INSTANCE_NAME)
-      await this.ensureDistroRegistered()
-    })
+   /**
+   * Check the WSL distribution version is acceptable; upgrade the distro
+   * version if it is too old.
+   * @precondition The distribution is already registered.
+   */
+   protected async upgradeDistroAsNeeded() {
+    let existingVersion = await this.getDistroVersion()
+
+    if (!semver.valid(existingVersion, true)) {
+      existingVersion += '.0'
+    }
+    let desiredVersion = DISTRO_VERSION
+
+    if (!semver.valid(desiredVersion, true)) {
+      desiredVersion += '.0'
+    }
+    if (semver.lt(existingVersion, desiredVersion, true)) {
+      // Make sure we copy the data over before we delete the old distro
+      await this.progressTracker.action('Upgrading WSL distribution', 100, async () => {
+        await this.initDataDistribution()
+        await this.execWSL('--unregister', INSTANCE_NAME)
+        await this.ensureDistroRegistered()
+      })
+    }
   }
 
   /**

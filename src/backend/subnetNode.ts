@@ -67,15 +67,19 @@ class SubnetNode {
    * Download and install the latest subnet-node version.
    */
   async downloadAndInstall(version: string) {
+   try {
     await this.stopService();
     const arch = os.arch() === 'arm64' ? 'arm64' : 'amd64';
     const url = `https://github.com/unicornultrafoundation/subnet-node/releases/download/${version}/subnet-${version}-linux-${arch}`;
-    const targetPath = path.join(`/usr/local/bin/subnet`);
+    const targetPath = "/usr/local/bin/subnet";
     // Download the file using execCommand to avoid being blocked by Windows
     await this.backend.execCommand({root: true}, 'curl', '-L', '-o', targetPath, url);
     // Move the file to the target path
     await this.backend.execCommand({root: true},'chmod', '+x', targetPath);
     await this.startService();
+   } catch (error) {
+    console.error(`Failed to download and install subnet-node version ${version}:`, error);
+   }
   }
 
   /**
