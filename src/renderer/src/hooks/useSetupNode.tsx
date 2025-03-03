@@ -25,10 +25,11 @@ export const useSetupNode = (onSuccess?: () => void, onError?: () => void) => {
             }
           }
         ])
-        await sleep(3000)
+        await sleep(5000)
         console.log('setup node result', result)
         return true
       } catch (err) {
+        console.log(err)
         throw err
       }
     },
