@@ -1,8 +1,9 @@
 import Button from '@renderer/components/Button'
 import Input from '@renderer/components/Input'
+import { useNodeStatus } from '@renderer/hooks/useNodeStatus'
 import { useSetupNode } from '@renderer/hooks/useSetupNode'
 import { Label } from 'flowbite-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export default function AccountPage() {
@@ -10,9 +11,17 @@ export default function AccountPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [validationErr, setValidationErr] = useState('')
+  const { data: haveAccount } = useNodeStatus()
 
-  const { mutate: setupNode, isPending, error } = useSetupNode()
+  const { mutateAsync: setupNode, isSuccess, isPending, error } = useSetupNode()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (haveAccount) {
+      navigate('/')
+      return
+    }
+  }, [haveAccount])
 
   const handleSetupNode = async () => {
     setValidationErr('')
@@ -21,8 +30,7 @@ export default function AccountPage() {
       return;
     }
 
-    setupNode({ username, password })
-    navigate('/')
+    await setupNode({ username, password })
   }
 
   return (
@@ -73,7 +81,7 @@ export default function AccountPage() {
             }
           />
         </div>
-        <Button isProcessing={isPending} type="primary" onClick={handleSetupNode}>
+        <Button isProcessing={isPending || (isSuccess && !haveAccount)} type="primary" onClick={handleSetupNode}>
           Setup node
         </Button>
       </div>
