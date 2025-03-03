@@ -11,7 +11,7 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [validationErr, setValidationErr] = useState('')
 
-  const { mutate: setupNode, isPending, error } = useSetupNode()
+  const { mutateAsync: setupNode, isPending, error } = useSetupNode()
   const navigate = useNavigate()
 
   const handleSetupNode = async () => {
@@ -21,7 +21,7 @@ export default function AccountPage() {
       return;
     }
 
-    setupNode({ username, password })
+    await setupNode({ username, password })
     navigate('/')
   }
 
