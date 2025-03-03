@@ -4,6 +4,7 @@ import os from 'os'
 import util from 'util'
 import * as childProcess from '../utils/childProcess'
 import events from 'events'
+import crypto from 'crypto';
 import {
   Architecture,
   BackendError,
@@ -26,7 +27,7 @@ import Logging from '../utils/logging'
 import fs from 'fs'
 import yaml from 'yaml'
 import DEFAULT_CONFIG from '../assets/lima-config.yaml'
-import { MountType, VMType } from '../config/settings'
+import { ContainerEngine, MountType, VMType } from '../config/settings'
 import DEPENDENCY_VERSIONS from '../assets/dependencies.yaml'
 import net from 'net'
 import semver from 'semver'
@@ -48,6 +49,25 @@ const ALPINE_EDITION = 'rd'
 const ALPINE_VERSION = DEPENDENCY_VERSIONS.alpineLimaISO.alpineVersion
 const PREVIOUS_LIMA_SUDOERS_LOCATION = '/private/etc/sudoers.d/subnet-desktop-lima'
 const LIMA_SUDOERS_LOCATION = '/private/etc/sudoers.d/zzzzz-subnet-desktop-lima'
+const DEFAULT_DOCKER_SOCK_LOCATION = '/var/run/docker.sock';
+
+type SudoReason = 'networking' | 'docker-socket';
+
+/**
+ * SudoCommand describes an operation that will be run under sudo.  This is
+ * returned from various methods that need to determine what commands we need to
+ * run under sudo to have all functionality.
+ */
+interface SudoCommand {
+  /** Reason why we want sudo access, */
+  reason: SudoReason;
+  /** Commands that will need to be executed. */
+  commands: string[];
+  /** Paths that will be affected by this command. */
+  paths: string[];
+}
+
+
 
 /**
  * Lima networking configuration.
@@ -222,6 +242,11 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
   protected cfg: BackendSettings | undefined
 
   #containerEngineClient: ContainerEngineClient | undefined
+
+  private static calcRandomTag(desiredLength: number) {
+    // quicker to use Math.random() than pull in all the dependencies utils/string:randomStr wants
+    return Math.random().toString().substring(2, desiredLength + 2);
+  }
 
   get containerEngineClient() {
     if (this.#containerEngineClient) {
@@ -758,7 +783,275 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
    * @note This may request the root password.
    */
   protected async installToolsWithSudo(): Promise<boolean> {
-    return true
+    const randomTag = LimaBackend.calcRandomTag(8);
+    const commands: Array<string> = [];
+    const explanations: Partial<Record<SudoReason, string[]>> = {};
+  
+    const processCommand = (cmd: SudoCommand | undefined) => {
+      if (cmd) {
+        commands.push(...cmd.commands);
+        explanations[cmd.reason] = (explanations[cmd.reason] ?? []).concat(...cmd.paths);
+      }
+    };
+  
+    if (os.platform() === 'darwin') {
+      await this.progressTracker.action('Setting up virtual ethernet', 10, async() => {
+        processCommand(await this.installVMNETTools());
+      });
+      await this.progressTracker.action('Setting Lima permissions', 10, async() => {
+        processCommand(await this.ensureRunLimaLocation());
+        processCommand(await this.createLimaSudoersFile(randomTag));
+      });
+    }
+    await this.progressTracker.action('Setting up Docker socket', 10, async() => {
+      processCommand(await this.configureDockerSocket());
+    });
+  
+    if (commands.length === 0) {
+      return true;
+    }
+  
+    const requirePassword = await this.sudoRequiresPassword();
+    let singleCommand = commands.join('; ');
+  
+    // Escape dấu '
+    singleCommand = singleCommand.replace(/'/g, "'\"'\"'");
+  
+    try {
+      if (requirePassword) {
+        console.log(`🔹 Running sudo with password prompt: ${singleCommand}`);
+        await this.sudoExec(`/bin/sh -xec '${singleCommand}'`);
+      } else {
+        try {
+          console.log(`🔹 Running sudo without password: ${singleCommand}`);
+          await childProcess.spawnFile('sudo', ['--non-interactive', '/bin/sh', '-xec', singleCommand],
+            { stdio: ['ignore', 'pipe', 'pipe'] });
+        } catch (error: any) {
+          console.warn(`⚠️ Failed sudo --non-interactive, falling back to prompt: ${error.message}`);
+          await this.sudoExec(`/bin/sh -xec '${singleCommand}'`);
+        }
+      }
+      this.#adminAccess = true;
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('User did not grant permission')) {
+        this.#adminAccess = false;
+        console.error('❌ Failed to execute sudo, falling back to unprivileged operation', err);
+        return false;
+      }
+      throw err;
+    }
+  
+    return true;
+  }
+  
+
+  protected async configureDockerSocket(this: Readonly<this> & this): Promise<SudoCommand | undefined> {
+    if (this.cfg?.containerEngine.name !== ContainerEngine.MOBY) {
+      return;
+    }
+    const realPath = await this.evalSymlink(DEFAULT_DOCKER_SOCK_LOCATION);
+    const targetPath = path.join(paths.altAppHome, 'docker.sock');
+
+    if (realPath === targetPath) {
+      return;
+    }
+
+    return {
+      reason:   'docker-socket',
+      commands: [`ln -sf "${ targetPath }" "${ DEFAULT_DOCKER_SOCK_LOCATION }"`],
+      paths:    [DEFAULT_DOCKER_SOCK_LOCATION],
+    };
+  }
+
+  protected async evalSymlink(this: Readonly<this>, path: string): Promise<string> {
+    // Use lstat.isSymbolicLink && readlink(path) to walk symlinks,
+    // instead of fs.readlink(file) to show both where a symlink is
+    // supposed to point, whether or not the referent exists right now.
+    // Do this because the lima docker.sock (the referent) is deleted when lima shuts down.
+    // Most of the time /var/run/docker.sock points directly to the lima socket, but
+    // this code allows intermediate symlinks.
+    try {
+      while ((await fs.promises.lstat(path)).isSymbolicLink()) {
+        path = await fs.promises.readlink(path);
+      }
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.log(`Error trying to resolve symbolic link ${ path }:`, err);
+      }
+    }
+
+    return path;
+  }
+
+
+  protected async createLimaSudoersFile(this: Readonly<this> & this, randomTag: string): Promise<SudoCommand | undefined> {
+    const paths: string[] = [];
+    const commands: string[] = [];
+
+    try {
+      await fs.promises.access(PREVIOUS_LIMA_SUDOERS_LOCATION);
+      commands.push(`rm -f ${ PREVIOUS_LIMA_SUDOERS_LOCATION }`);
+      paths.push(PREVIOUS_LIMA_SUDOERS_LOCATION);
+      console.debug(`Previous sudoers file ${ PREVIOUS_LIMA_SUDOERS_LOCATION } exists, will delete.`);
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') {
+        console.error(`Error checking ${ PREVIOUS_LIMA_SUDOERS_LOCATION }: ${ err }; ignoring.`);
+      }
+    }
+
+    const networkConfig = await this.installCustomLimaNetworkConfig(true);
+    const sudoers = this.sudoersFile(networkConfig);
+    let updateSudoers = false;
+
+    try {
+      const existingSudoers = await fs.promises.readFile(LIMA_SUDOERS_LOCATION, { encoding: 'utf-8' });
+
+      if (sudoers !== existingSudoers) {
+        updateSudoers = true;
+      }
+    } catch (ex: any) {
+      if (ex?.code !== 'ENOENT') {
+        throw ex;
+      }
+      updateSudoers = true;
+      console.debug(`Sudoers file ${ LIMA_SUDOERS_LOCATION } does not exist, creating.`);
+    }
+
+    if (updateSudoers) {
+      const tmpFile = path.join(os.tmpdir(), `rd-sudoers${ randomTag }.txt`);
+
+      await fs.promises.writeFile(tmpFile, sudoers, { mode: 0o644 });
+      commands.push(`mkdir -p "${ path.dirname(LIMA_SUDOERS_LOCATION) }" && cp "${ tmpFile }" ${ LIMA_SUDOERS_LOCATION } && rm -f "${ tmpFile }"`);
+      paths.push(LIMA_SUDOERS_LOCATION);
+      console.debug(`Sudoers file ${ LIMA_SUDOERS_LOCATION } needs to be updated.`);
+    }
+
+    if (commands.length > 0) {
+      return {
+        reason: 'networking', commands, paths,
+      };
+    }
+  }
+
+    /**
+   * Create a sudoers file that has to be byte-for-byte identical to what `limactl sudoers` would create.
+   * We can't use `limactl sudoers` because it will fail when socket_vmnet has not yet been installed at
+   * the secure path. We don't want to ask the user twice for a password: once to install socket_vmnet,
+   * and once more to update the sudoers file. So we try to predict what `limactl sudoers` would write.
+   */
+    protected sudoersFile(config: LimaNetworkConfiguration): string {
+      const host = config.networks['host'];
+      const shared = config.networks['subnet-desktop-shared'];
+  
+      if (host.mode !== 'host') {
+        throw new Error('host network has wrong type');
+      }
+      if (shared.mode !== 'shared') {
+        throw new Error('shared network has wrong type');
+      }
+  
+      let name = 'host';
+      let sudoers = `%everyone ALL=(root:wheel) NOPASSWD:NOSETENV: /bin/mkdir -m 775 -p /private/var/run
+  
+  # Manage "${ name }" network daemons
+  
+  %everyone ALL=(root:wheel) NOPASSWD:NOSETENV: \\
+      /opt/subnet-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=host --vmnet-gateway=${ host.gateway } --vmnet-dhcp-end=${ host.dhcpEnd } --vmnet-mask=${ host.netmask } /private/var/run/socket_vmnet.${ name }, \\
+      /usr/bin/pkill -F /private/var/run/${ name }_socket_vmnet.pid
+  
+  `;
+  
+      const networks = Object.keys(config.networks).sort();
+  
+      for (const name of networks) {
+        const prefix = 'subnet-desktop-bridged_';
+  
+        if (!name.startsWith(prefix)) {
+          continue;
+        }
+        sudoers += `# Manage "${ name }" network daemons
+  
+  %everyone ALL=(root:wheel) NOPASSWD:NOSETENV: \\
+      /opt/subnet-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=bridged --vmnet-interface=${ name.slice(prefix.length) } /private/var/run/socket_vmnet.${ name }, \\
+      /usr/bin/pkill -F /private/var/run/${ name }_socket_vmnet.pid
+  
+  `;
+      }
+  
+      name = 'subnet-desktop-shared';
+      sudoers += `# Manage "${ name }" network daemons
+  
+  %everyone ALL=(root:wheel) NOPASSWD:NOSETENV: \\
+      /opt/subnet-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=shared --vmnet-gateway=${ shared.gateway } --vmnet-dhcp-end=${ shared.dhcpEnd } --vmnet-mask=${ shared.netmask } /private/var/run/socket_vmnet.${ name }, \\
+      /usr/bin/pkill -F /private/var/run/${ name }_socket_vmnet.pid
+  `;
+  
+    return sudoers;
+  }
+  
+  protected async ensureRunLimaLocation(this: unknown): Promise<SudoCommand | undefined> {
+    const limaRunLocation: string = NETWORKS_CONFIG.paths.varRun;
+    const commands: string[] = [];
+    let dirInfo: fs.Stats | null;
+
+    try {
+      dirInfo = await fs.promises.stat(limaRunLocation);
+
+      // If it's owned by root and not readable by others, it's fine
+      if (dirInfo.uid === 0 && (dirInfo.mode & fs.constants.S_IWOTH) === 0) {
+        return;
+      }
+    } catch (err) {
+      dirInfo = null;
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.log(`Unexpected situation with ${ limaRunLocation }, stat => error ${ err }`, err);
+        throw err;
+      }
+    }
+    if (!dirInfo) {
+      commands.push(`mkdir -p ${ limaRunLocation }`);
+      commands.push(`chmod 755 ${ limaRunLocation }`);
+    }
+    commands.push(`chown -R root:daemon ${ limaRunLocation }`);
+    commands.push(`chmod -R o-w ${ limaRunLocation }`);
+
+    return {
+      reason: 'networking',
+      commands,
+      paths:  [limaRunLocation],
+    };
+  }
+
+    /**
+   * Use the sudo-prompt library to run the script as root
+   * @param command: Path to an executable file
+   */
+  protected async sudoExec(this: unknown, command: string) {
+    return new Promise((resolve, reject) => {
+      const osascriptCmd = `osascript -e 'do shell script "${command.replace(/"/g, '\\"')}" with administrator privileges'`;
+      childProcess.exec(osascriptCmd, (error, stdout, stderr) => {
+        if (error) {
+          reject(`Err: ${stderr || error.message}`);
+        } else {
+          resolve(stdout.trim());
+        }
+      });
+    });
+  }
+
+  protected async sudoRequiresPassword() {
+    try {
+      // Check if we can run /usr/bin/true (or /bin/true) without requiring a password
+      await childProcess.spawnFile('sudo', ['--non-interactive', '--reset-timestamp', 'true'],
+        { stdio: ['ignore', 'pipe', 'pipe'] });
+      console.debug("sudo --non-interactive didn't throw an error, so assume we can do passwordless sudo");
+
+      return false;
+    } catch (err: any) {
+      console.debug(`sudo --non-interactive threw an error, so assume it needs a password: ${ JSON.stringify(err) }`);
+
+      return true;
+    }
   }
 
   async start(config_: BackendSettings): Promise<void> {
@@ -1502,4 +1795,141 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
     await this.progressTracker.action('Checking Subnet Node status', 100,  this.subnetNode.checkStatus())
   }
 
+
+   /**
+   * Determine the commands required to install vmnet-related tools.
+   */
+   protected async installVMNETTools(this: unknown): Promise<SudoCommand | undefined> {
+    const sourcePath = path.join(paths.resources, os.platform(), 'lima', 'socket_vmnet');
+    const installedPath = VMNET_DIR;
+    const walk = async(dir: string): Promise<[string[], string[]]> => {
+      const fullPath = path.resolve(sourcePath, dir);
+      const entries = await fs.promises.readdir(fullPath, { withFileTypes: true });
+      const directories: string[] = [];
+      const files: string[] = [];
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const [childDirs, childFiles] = await walk(path.join(dir, entry.name));
+
+          directories.push(path.join(dir, entry.name), ...childDirs);
+          files.push(...childFiles);
+        } else if (entry.isFile() || entry.isSymbolicLink()) {
+          files.push(path.join(dir, entry.name));
+        } else {
+          const childPath = path.join(fullPath, entry.name);
+
+          console.error(`vmnet: Skipping unexpected file ${ childPath }`);
+        }
+      }
+
+      return [directories, files];
+    };
+    const [directories, files] = await walk('.');
+    const hashesMatch = await Promise.all(files.map(async(relPath) => {
+      const hashFile = async(fullPath: string) => {
+        const hash = crypto.createHash('sha256');
+
+        await new Promise((resolve) => {
+          const readStream = fs.createReadStream(fullPath);
+
+          // On error, resolve to anything that won't match the expected hash;
+          // this will trigger a copy. Using the full path is good enough here.
+          hash.on('finish', resolve);
+          hash.on('error', () => resolve(fullPath));
+          readStream.on('error', () => resolve(fullPath));
+          readStream.pipe(hash);
+        });
+
+        return hash.digest('hex');
+      };
+      const sourceFile = path.normalize(path.join(sourcePath, relPath));
+      const installedFile = path.normalize(path.join(installedPath, relPath));
+      const [sourceHash, installedHash] = await Promise.all([
+        hashFile(sourceFile), hashFile(installedFile),
+      ]);
+
+      return sourceHash === installedHash;
+    }));
+
+    if (hashesMatch.every(matched => matched)) {
+      return;
+    }
+
+    const workdir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'rd-vmnet-install-'));
+    const tarPath = path.join(workdir, 'vmnet.tar');
+    const commands: string[] = [];
+
+    try {
+      // Actually create the tar file using all the files, not just the
+      // outdated ones, since we're going to need a prompt anyway.
+      const tarStream = fs.createWriteStream(tarPath);
+      const archive = tar.pack();
+      const archiveFinished = util.promisify(stream.finished)(archive as any);
+      const newEntry = util.promisify(archive.entry.bind(archive));
+      const baseHeader: Partial<tar.Headers> = {
+        mode:  0o755,
+        uid:   0,
+        uname: 'root',
+        gname: 'wheel',
+        type:  'directory',
+      };
+
+      archive.pipe(tarStream);
+
+      await newEntry({
+        ...baseHeader,
+        name: path.basename(installedPath),
+      });
+      for (const relPath of directories) {
+        const info = await fs.promises.lstat(path.join(sourcePath, relPath));
+
+        await newEntry({
+          ...baseHeader,
+          name:  path.normalize(path.join(path.basename(installedPath), relPath)),
+          mtime: info.mtime,
+        });
+      }
+      for (const relPath of files) {
+        const source = path.join(sourcePath, relPath);
+        const info = await fs.promises.lstat(source);
+        const header: tar.Headers = {
+          ...baseHeader,
+          name:  path.normalize(path.join(path.basename(installedPath), relPath)),
+          mode:  info.mode,
+          mtime: info.mtime,
+        };
+
+        if (info.isSymbolicLink()) {
+          header.type = 'symlink';
+          header.linkname = await fs.promises.readlink(source);
+          await newEntry(header);
+        } else {
+          header.type = 'file';
+          header.size = info.size;
+          const entry = archive.entry(header);
+          const readStream = fs.createReadStream(source);
+          const entryFinished = util.promisify(stream.finished)(entry);
+
+          readStream.pipe(entry);
+          await entryFinished;
+        }
+      }
+
+      archive.finalize();
+      await archiveFinished;
+      const command = `tar -xf "${ tarPath }" -C "${ path.dirname(installedPath) }"`;
+
+      console.log(`VMNET tools install required: ${ command }`);
+      commands.push(command);
+    } finally {
+      commands.push(`rm -fr ${ workdir }`);
+    }
+
+    return {
+      reason: 'networking',
+      commands,
+      paths:  [VMNET_DIR],
+    };
+  }
 }
