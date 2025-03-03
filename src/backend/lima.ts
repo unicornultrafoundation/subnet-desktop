@@ -846,9 +846,6 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
   
 
   protected async configureDockerSocket(this: Readonly<this> & this): Promise<SudoCommand | undefined> {
-    if (this.cfg?.containerEngine.name !== ContainerEngine.MOBY) {
-      return;
-    }
     const realPath = await this.evalSymlink(DEFAULT_DOCKER_SOCK_LOCATION);
     const targetPath = path.join(paths.altAppHome, 'docker.sock');
 
@@ -1026,16 +1023,29 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
    * Use the sudo-prompt library to run the script as root
    * @param command: Path to an executable file
    */
-  protected async sudoExec(this: unknown, command: string) {
+  protected async sudoExec(command: string) {
     return new Promise((resolve, reject) => {
-      const osascriptCmd = `osascript -e 'do shell script "${command.replace(/"/g, '\\"')}" with administrator privileges'`;
-      childProcess.exec(osascriptCmd, (error, stdout, stderr) => {
-        if (error) {
-          reject(`Err: ${stderr || error.message}`);
-        } else {
-          resolve(stdout.trim());
-        }
-      });
+      if (os.platform() === 'darwin') {
+        // Use AppleScript to show a password prompt on macOS
+        const osascriptCmd = `osascript -e 'do shell script "${command.replace(/"/g, '\\"')}" with administrator privileges'`;
+        childProcess.exec(osascriptCmd, (error, stdout, stderr) => {
+          if (error) {
+            reject(`Error: ${stderr || error.message}`);
+          } else {
+            resolve(stdout.trim());
+          }
+        });
+      } else {
+        // Use `pkexec` on Linux to show a GUI password prompt
+        const pkexecCmd = `pkexec sh -c "${command.replace(/"/g, '\\"')}"`;
+        childProcess.exec(pkexecCmd, (error, stdout, stderr) => {
+          if (error) {
+            reject(`Error: ${stderr || error.message}`);
+          } else {
+            resolve(stdout.trim());
+          }
+        });
+      }
     });
   }
 
@@ -1061,7 +1071,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
     await this.setState(State.STARTING)
     this.currentAction = Action.STARTING
-    this.#adminAccess = config_.application.adminAccess ?? true
+    //this.#adminAccess = config_.application.adminAccess ?? true
     this.#containerEngineClient = undefined
     await this.progressTracker.action('Starting Backend', 10, async () => {
       try {
