@@ -18,6 +18,7 @@ export const useNodeStatus = () => {
         console.log(error)
         return true
       }
-    }
+    },
+    refetchInterval: 2000
   })
 }
