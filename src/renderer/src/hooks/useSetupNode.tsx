@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNodeStatus } from './useNodeStatus'
 import { NodeAuth } from '@/interface/node'
 import { useRequestRPC } from './useRequestRPC'
+import { sleep } from '@renderer/utils/promise'
 
 export const useSetupNode = (onSuccess?: () => void, onError?: () => void) => {
   const { requestRPC } = useRequestRPC()
@@ -24,6 +25,7 @@ export const useSetupNode = (onSuccess?: () => void, onError?: () => void) => {
             }
           }
         ])
+        await sleep(3000)
         console.log('setup node result', result)
         return true
       } catch (err) {
