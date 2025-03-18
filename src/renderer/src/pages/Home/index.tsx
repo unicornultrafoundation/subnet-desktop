@@ -52,7 +52,7 @@ function HomePage() {
     <main className="relative flex min-h-screen flex-col">
       <div className="p-6 flex gap-3 items-center justify-start border-b-[1px] border-neutral-900">
         <img src={Logo} width={40} height={40} alt="logo" />
-        <h4>Node Desktop App by U2U Network</h4>
+        <h4>DePin Subnet Client by U2U Network</h4>
       </div>
       <div className="grid w-full grid-cols-1 flex-col flex-wrap py-6 px-10 justify-between tablet:grid-cols-2 laptop:grid-cols-2 desktop:grid-cols-2">
         <div className="flex gap-6 items-center pb-8">
