@@ -36,7 +36,7 @@ class SubnetNode {
     try {
       await this.getConfig();
     } catch(_) {
-      this.logger.error('Failed to get version');
+      this.logger.error('Failed to get version from config');
       return '0.0.0'; // Return a default version if the config file does not exist
     }
 
@@ -47,10 +47,9 @@ class SubnetNode {
         params: [],
         id: 1
       });
-  
       return response.data.result.version;
-    } catch(_){
-      this.logger.error('Failed to get version');
+    } catch(err: any){
+      this.logger.error('Failed to get version: ' + err.message);
       return '0.0.0'; // Return a default version if the version cannot be retrieved
     }
   }
@@ -133,7 +132,7 @@ class SubnetNode {
     await this.restartService();
   }
 
-  async checkStatus(retries = 5, delay = 3000): Promise<boolean> {
+  async checkStatus(retries = 10, delay = 5000): Promise<boolean> {
     for (let i = 0; i < retries; i++) {
       try {
         const response = await axios.post('http://localhost:8080/status')

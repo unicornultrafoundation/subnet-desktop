@@ -843,8 +843,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
           return
         }
 
-        this.progressTracker.action('Checking Docker Running', 100, this.checkDockerRunning())
-
+        await this.progressTracker.action('Checking Docker Running', 100, this.checkDockerRunning())
         await this.progressTracker.action("Installing Subnet Node", 100, this.subnetNode.start())
         await this.checkSubnetNodeOnline()
 

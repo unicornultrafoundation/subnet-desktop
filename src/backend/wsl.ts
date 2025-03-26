@@ -577,9 +577,7 @@ networkingMode=mirrored
         )
         
 
-        this.progressTracker.action('Checking Docker Running', 100, this.checkDockerRunning())
-
-
+        await this.progressTracker.action('Checking Docker Running', 100, this.checkDockerRunning())
         await this.progressTracker.action('Installing Subnet', 100, this.subnetNode.start())
         await this.checkSubnetNodeOnline()
         const subnetConfig = await this.getSubnetConfig()
