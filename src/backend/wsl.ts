@@ -29,9 +29,8 @@ import { ContainerEngineClient } from './containerClient/types'
 import SCRIPT_DATA_WSL_CONF from '../assets/scripts/wsl-data.conf?raw'
 import WSL_INIT_SCRIPT from '../assets/scripts/wsl-init?raw'
 import { ContainerEngine } from '../config/settings'
-import { NerdctlClient } from './containerClient/nerdctlClient'
 import WSL_EXEC from '../assets/scripts/wsl-exec?raw'
-import NERDCTL from '../assets/scripts/nerdctl?raw'
+
 import BackgroundProcess from '../utils/backgroundProcess'
 import yaml from 'yaml'
 import { dialog } from 'electron' // Add this import
@@ -518,8 +517,10 @@ networkingMode=mirrored
                     })
                   }),
                   this.progressTracker.action('container engine components', 50, async () => {
-                    await this.writeConf('containerd', { log_owner: 'root' })
-                    await this.writeFile('/usr/local/bin/nerdctl', NERDCTL, 0o755)
+                    //await this.writeFile('/etc/init.d/docker', SERVICE_SCRIPT_DOCKERD, 0o755);
+                    
+                    // await this.writeConf('containerd', { log_owner: 'root' })
+                    // await this.writeFile('/usr/local/bin/nerdctl', NERDCTL, 0o755)
                   }),
                   // Remove any residual rc artifacts from previous version
                   await this.execCommand(
@@ -572,36 +573,12 @@ networkingMode=mirrored
           'Starting container engine',
           0,
 
-          this.execCommand('/sbin/rc-service', 'containerd', 'start')
+          this.execCommand('/sbin/rc-service', 'docker', 'start')
         )
-        switch (config.containerEngine.name) {
-          case ContainerEngine.CONTAINERD:
-            try {
-              await this.execCommand(
-                {
-                  root: true,
-                  expectFailure: true
-                },
-                'ctr',
-                '--address',
-                '/run/containerd/containerd.sock',
-                'namespaces',
-                'create',
-                'default'
-              )
-            } catch {
-              // expecting failure because the namespace may already exist
-            }
-            this.#containerEngineClient = new NerdctlClient(this)
-            break
-        }
-        // Do not await on this, as we don't want to wait until the proxy exits.
-        //this.runWslProxy().catch(console.error)
-        await this.progressTracker.action(
-          'Waiting for container engine to be ready',
-          0,
-          this.containerEngineClient.waitForReady()
-        )
+        
+
+        this.progressTracker.action('Checking Docker Running', 100, this.checkDockerRunning())
+
 
         await this.progressTracker.action('Installing Subnet', 100, this.subnetNode.start())
         await this.checkSubnetNodeOnline()
@@ -1698,5 +1675,20 @@ networkingMode=mirrored
 
   async checkSubnetNodeOnline() {
     await this.progressTracker.action('Checking Subnet Node status', 100, this.subnetNode.checkStatus())
+  }
+
+  /**
+   * Check if Docker is running.
+   */
+  async checkDockerRunning(): Promise<boolean> {
+    while (true) {
+      try {
+        const result = await this.execCommand({ capture: true }, 'docker', 'info');
+        return result.includes('Server Version');
+      } catch (error) {
+        console.error('Docker is not running:', error);
+        await util.promisify(setTimeout)(1_000)
+      }
+    }
   }
 }

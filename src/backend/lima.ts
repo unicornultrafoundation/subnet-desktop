@@ -31,7 +31,6 @@ import DEPENDENCY_VERSIONS from '../assets/dependencies.yaml'
 import net from 'net'
 import semver from 'semver'
 import { ContainerEngineClient } from './containerClient/types'
-import { NerdctlClient } from './containerClient/nerdctlClient'
 import stream from 'stream'
 import tar from 'tar-stream'
 import NETWORKS_CONFIG from '../assets/networks-config.yaml'
@@ -246,6 +245,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
   progressTracker: ProgressTracker
 
   arch: Architecture
+
 
   subnetNode: SubnetNode;
 
@@ -832,31 +832,18 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
           return
         }
 
-        await this.startService('containerd')
-        try {
-          await this.execCommand(
-            {
-              root: true,
-              expectFailure: true
-            },
-            'ctr',
-            '--address',
-            '/run/containerd/containerd.sock',
-            'namespaces',
-            'create',
-            'default'
-          )
-        } catch {
-          // expecting failure because the namespace may already exist
-        }
+        // The string is for shell expansion, not a JS template string.
+        // eslint-disable-next-line no-template-curly-in-string
+        await this.writeConf('docker', { DOCKER_OPTS: '--host=unix:///var/run/docker.sock --host=unix:///var/run/docker.sock.raw ${DOCKER_OPTS:-}' });
+        await this.startService('docker');
+
 
         if (this.currentAction !== Action.STARTING) {
           // User aborted
           return
         }
 
-        this.#containerEngineClient = new NerdctlClient(this)
-        await this.#containerEngineClient?.waitForReady()
+        this.progressTracker.action('Checking Docker Running', 100, this.checkDockerRunning())
 
         await this.progressTracker.action("Installing Subnet Node", 100, this.subnetNode.start())
         await this.checkSubnetNodeOnline()
@@ -886,6 +873,17 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
         this.currentAction = Action.NONE
       }
     })
+  }
+
+  /**
+   * Write a configuration file for an OpenRC service.
+   * @param service The name of the OpenRC service to configure.
+   * @param settings A mapping of configuration values.  This should be shell escaped.
+   */
+  async writeConf(service: string, settings: Record<string, string>) {
+    const contents = Object.entries(settings).map(([key, value]) => `${ key }="${ value }"\n`).join('');
+
+    await this.writeFile(`/etc/conf.d/${ service }`, contents);
   }
 
   /**
@@ -1142,7 +1140,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
             { root: true },
             '/sbin/rc-service',
             '--ifstarted',
-            'containerd',
+            'docker',
             'stop'
           )
           await this.execCommand(
@@ -1500,6 +1498,21 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 
   async checkSubnetNodeOnline() {
     await this.progressTracker.action('Checking Subnet Node status', 100,  this.subnetNode.checkStatus())
+  }
+
+  /**
+   * Check if Docker is running.
+   */
+  async checkDockerRunning(): Promise<boolean> {
+    while (true) {
+      try {
+        const result = await this.execCommand({ capture: true }, 'docker', 'info');
+        return result.includes('Server Version');
+      } catch (error) {
+        console.error('Docker is not running:', error);
+        await util.promisify(setTimeout)(1_000)
+      }
+    }
   }
 
 }
