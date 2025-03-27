@@ -1,6 +1,6 @@
-# Rancher Desktop related changes
+# Subnet Desktop related changes
 
-This module has been imported from https://github.com/jorangreef/sudo-prompt/tree/v9.2.1 (commit c3cc31a) and modified for Rancher Desktop:
+This module has been imported from https://github.com/jorangreef/sudo-prompt/tree/v9.2.1 (commit c3cc31a) and modified for Subnet Desktop:
 
 The `applet.app` used to be included as a base64 encoded ZIP file inside `index.js` and extracted at runtime into a temp directory. The extracted app was renamed to match the `name` and `icns` specified by the caller, and the commands were written into `applet.app/Content/MacOS/sudo-prompt-command`.
 
@@ -10,15 +10,15 @@ The bundled applet did not include support for `aarch64` machines, so needed Ros
 
 The applet source code has been moved to `<repo>/src/sudo-prompt` and is built from source using `osacompile`, so `applet` will be an up-to-date universal binary supporting `x86_64` and `aarch64`.
 
-The applet is placed into `<repo>/resources/darwin/internal/Rancher Desktop.app`. The app name is displayed as part of the dialog: "Rancher Desktop wants to make changes".
+The applet is placed into `<repo>/resources/darwin/internal/Subnet Desktop.app`. The app name is displayed as part of the dialog: "Subnet Desktop wants to make changes".
 
-The `Contents/Info.plist` file has the `CFBundleName` set to "Rancher Desktop Password Prompt".
+The `Contents/Info.plist` file has the `CFBundleName` set to "Subnet Desktop Password Prompt".
 
 A `.icns` format icon has been created (the old `.png` file doesn't seem to work with the new applet) and is stored into `Contents/Resources/applet.icns`.
 
 The `sudo-prompt-script` has been moved from `Contents/MacOS` to `Contents/Resources/Scripts` because it cannot be code-signed.
 
-When the `RD_SUDO_PROMPT_OSASCRIPT` environment variable is set then the `Contents/Resources/Scripts/main.scpt` file (the compiled version of `sudo-prompt.applescript`) is executed via `osascript` instead of the applet. This will show an approval prompt that supports the Apple watch, or a touch id keyboard, but will not use the `Rancher Desktop` name or icon in the dialog.
+When the `RD_SUDO_PROMPT_OSASCRIPT` environment variable is set then the `Contents/Resources/Scripts/main.scpt` file (the compiled version of `sudo-prompt.applescript`) is executed via `osascript` instead of the applet. This will show an approval prompt that supports the Apple watch, or a touch id keyboard, but will not use the `Subnet Desktop` name or icon in the dialog.
 
 The `sudo-prompt.applescript` has been modified to locate the `sudo-prompt-script` inside the applet because the working directory will no longer be inside the app.
 
