@@ -11,6 +11,7 @@
     "src/assets/**/*",
     "src/backend/**/*",
     "src/config/**/*",
+    "pkg/**/*",
   ],
   "compilerOptions": {
     "composite": true,
@@ -20,7 +21,7 @@
     ],
     "paths": {
       "@utils/*": ["src/utils/*"],
-      "@pkg/*": ["src/*"],
+      "@pkg/*": ["pkg/*"]
     }
   }
 }
