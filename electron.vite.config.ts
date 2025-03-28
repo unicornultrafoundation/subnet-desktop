@@ -6,7 +6,12 @@ import VitePluginString from 'vite-plugin-string'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin(), ViteYaml(), VitePluginString()]
+    plugins: [externalizeDepsPlugin(), ViteYaml(), VitePluginString()],
+    resolve: {
+      alias: {
+        '@pkg':resolve('pkg')
+      }
+    },
   },
   preload: {
     plugins: [externalizeDepsPlugin()]
@@ -16,12 +21,12 @@ export default defineConfig({
       alias: {
         '@renderer': resolve('src/renderer/src'),
         '@': resolve('src/renderer/src'),
-        '@pkg': resolve('src/*')
       }
     },
     plugins: [react()],
     server: {
       host: true
     }
-  }
+  },
+  
 })

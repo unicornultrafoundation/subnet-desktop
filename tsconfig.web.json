@@ -10,6 +10,7 @@
     "src/assets/**/*",
     "src/backend/**/*",
     "src/config/**/*",
+    "pkg/**/*",
   ],
   "compilerOptions": {
     "composite": true,
@@ -20,7 +21,7 @@
         "src/renderer/src/*"
       ],
       "@/*": ["src/renderer/src/*"],
-      "@pkg/*": ["src/*"],
+      "@pkg/*": ["pkg/*"]
     }
   }
 }
