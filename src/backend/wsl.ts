@@ -110,6 +110,11 @@ export default class WSLBackend extends events.EventEmitter implements VMBackend
     return 'wsl'
   }
 
+
+  writeSetting(changed: RecursivePartial<BackendSettings>) {
+    this.cfg = _.merge({}, this.cfg, changed);
+  }
+
   /** The current user-visible state of the backend. */
   protected internalState: State = State.STOPPED
   get state() {
@@ -457,7 +462,7 @@ networkingMode=mirrored
   async start(config_: BackendSettings): Promise<void> {
     await this.configureWSL() // Call the new method here
     const config = (this.cfg = _.defaultsDeep(clone(config_), {
-      containerEngine: { name: ContainerEngine.CONTAINERD }
+      containerEngine: { name: ContainerEngine.MOBY }
     }))
     await this.setState(State.STARTING)
     this.currentAction = Action.STARTING
