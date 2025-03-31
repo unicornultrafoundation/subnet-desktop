@@ -861,7 +861,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
    */
   protected sudoersFile(config: LimaNetworkConfiguration): string {
     const host = config.networks['host'];
-    const shared = config.networks['rancher-desktop-shared'];
+    const shared = config.networks['subnet-desktop-shared'];
 
     if (host.mode !== 'host') {
       throw new Error('host network has wrong type');
@@ -876,7 +876,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
 # Manage "${ name }" network daemons
 
 %everyone ALL=(root:wheel) NOPASSWD:NOSETENV: \\
-    /opt/rancher-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=host --vmnet-gateway=${ host.gateway } --vmnet-dhcp-end=${ host.dhcpEnd } --vmnet-mask=${ host.netmask } /private/var/run/socket_vmnet.${ name }, \\
+    /opt/subnet-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=host --vmnet-gateway=${ host.gateway } --vmnet-dhcp-end=${ host.dhcpEnd } --vmnet-mask=${ host.netmask } /private/var/run/socket_vmnet.${ name }, \\
     /usr/bin/pkill -F /private/var/run/${ name }_socket_vmnet.pid
 
 `;
@@ -884,7 +884,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
     const networks = Object.keys(config.networks).sort();
 
     for (const name of networks) {
-      const prefix = 'rancher-desktop-bridged_';
+      const prefix = 'subnet-desktop-bridged_';
 
       if (!name.startsWith(prefix)) {
         continue;
@@ -892,17 +892,17 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
       sudoers += `# Manage "${ name }" network daemons
 
 %everyone ALL=(root:wheel) NOPASSWD:NOSETENV: \\
-    /opt/rancher-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=bridged --vmnet-interface=${ name.slice(prefix.length) } /private/var/run/socket_vmnet.${ name }, \\
+    /opt/subnet-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=bridged --vmnet-interface=${ name.slice(prefix.length) } /private/var/run/socket_vmnet.${ name }, \\
     /usr/bin/pkill -F /private/var/run/${ name }_socket_vmnet.pid
 
 `;
     }
 
-    name = 'rancher-desktop-shared';
+    name = 'subnet-desktop-shared';
     sudoers += `# Manage "${ name }" network daemons
 
 %everyone ALL=(root:wheel) NOPASSWD:NOSETENV: \\
-    /opt/rancher-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=shared --vmnet-gateway=${ shared.gateway } --vmnet-dhcp-end=${ shared.dhcpEnd } --vmnet-mask=${ shared.netmask } /private/var/run/socket_vmnet.${ name }, \\
+    /opt/subnet-desktop/bin/socket_vmnet --pidfile=/private/var/run/${ name }_socket_vmnet.pid --socket-group=everyone --vmnet-mode=shared --vmnet-gateway=${ shared.gateway } --vmnet-dhcp-end=${ shared.dhcpEnd } --vmnet-mask=${ shared.netmask } /private/var/run/socket_vmnet.${ name }, \\
     /usr/bin/pkill -F /private/var/run/${ name }_socket_vmnet.pid
 `;
 
@@ -1136,7 +1136,7 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
    */
    protected async sudoExec(this: unknown, command: string) {
     await new Promise<void>((resolve, reject) => {
-      sudo(command, { name: 'Rancher Desktop' }, (error, stdout, stderr) => {
+      sudo(command, { name: 'Subnet Desktop' }, (error, stdout, stderr) => {
         if (stdout) {
           console.log(`Prompt for sudo: stdout: ${ stdout }`);
         }
