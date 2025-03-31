@@ -1190,7 +1190,6 @@ export class LimaBackend extends events.EventEmitter implements VMBackend, VMExe
   protected async configureDockerSocket(this: Readonly<this> & this): Promise<SudoCommand | undefined> {
     const realPath = await this.evalSymlink(DEFAULT_DOCKER_SOCK_LOCATION);
     const targetPath = path.join(paths.altAppHome, 'docker.sock');
-    console.log(realPath , targetPath)
     if (realPath === targetPath) {
       return;
     }
